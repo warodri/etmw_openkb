@@ -1,0 +1,22 @@
+# Local data and models - never commit donated content or weights
+data/*
+!data/.gitkeep
+models/
+*.gguf
+*.safetensors
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Vector stores
+*.lance/
+qdrant_storage/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
