@@ -12,7 +12,7 @@ Environment:
   OPENKB_OWNER_EMAIL   owner alert address (default: empty = mail alerts disabled)
   OPENKB_ENV_FILE      env file holding SMTP_HOST/PORT/USERNAME/PASSWORD,
                        EMAIL_FROM_ADDRESS/NAME (default: none)"""
-import json, os, re, sqlite3, ssl, smtplib, socket, threading, time, urllib.request, uuid
+import hashlib, json, os, re, secrets, sqlite3, ssl, smtplib, socket, threading, time, urllib.request, uuid
 from datetime import datetime, timezone
 from email.mime.text import MIMEText
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -54,6 +54,15 @@ def db():
         c.execute("ALTER TABLE tasks ADD COLUMN owner TEXT")
         c.execute("UPDATE tasks SET owner='legacy-shared' WHERE owner IS NULL")
         c.commit()
+    c.execute("CREATE TABLE IF NOT EXISTS auth_codes (email_hash TEXT PRIMARY KEY, code_hash TEXT, expires REAL, attempts INTEGER DEFAULT 0)")
+    c.execute("CREATE TABLE IF NOT EXISTS auth_locks (email_hash TEXT PRIMARY KEY, until REAL)")
+    c.execute("CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, owner TEXT, email TEXT, expires REAL)")
+    c.execute("CREATE TABLE IF NOT EXISTS send_log (k TEXT, ts REAL)")
+    now = time.time()
+    c.execute("DELETE FROM auth_codes WHERE expires<?", (now,))
+    c.execute("DELETE FROM sessions WHERE expires<?", (now,))
+    c.execute("DELETE FROM send_log WHERE ts<?", (now - 86400,))
+    c.commit()
     return c
 
 def task_rows(status, owner):
@@ -138,6 +147,62 @@ def check_guards(ip):
         save_state()
     return None
 
+# --- email-code sign-in (v0.1 beta) ---
+# Login mail uses LOGIN_SMTP_* (widened outbound: login codes to visitors only, Walter 21 Oct).
+# Owner alerts keep SMTP_* and remain owner-only.
+LOGIN_MAIL = {k: ENVV.get("LOGIN_SMTP_" + k, "") for k in ("HOST", "PORT", "USER", "PASSWORD", "FROM")}
+CODE_TTL = 600
+EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,240}\.[A-Za-z]{2,}$")
+TURNSTILE_SECRET = ENVV.get("TURNSTILE_SECRET", "")  # hook: when set, clients send a turnstile token instead of the local challenge
+_challenges = {}  # cid -> (answer, expires) - local bot-check, in-memory, one-time
+
+def _h(x): return hashlib.sha256(x.encode()).hexdigest()
+
+def send_login_code(email, code):
+    if not LOGIN_MAIL["HOST"]: return False
+    msg = MIMEText("Your OpenKB sign-in code is " + code + "\n\nIt is valid for 10 minutes. If you did not ask for it, you can ignore this email.")
+    msg["Subject"] = "Your OpenKB sign-in code"
+    msg["From"] = LOGIN_MAIL["FROM"]; msg["To"] = email
+    with smtplib.SMTP_SSL(LOGIN_MAIL["HOST"], int(LOGIN_MAIL["PORT"] or "465"), context=ssl.create_default_context(), timeout=15) as s:
+        if LOGIN_MAIL["USER"]: s.login(LOGIN_MAIL["USER"], LOGIN_MAIL["PASSWORD"])
+        s.sendmail(LOGIN_MAIL["FROM"], [email], msg.as_string())
+    return True
+
+def rate_hit(c, key, limit, window):
+    now = time.time()
+    n = c.execute("SELECT COUNT(*) FROM send_log WHERE k=? AND ts>?", (key, now - window)).fetchone()[0]
+    if n >= limit: return False
+    c.execute("INSERT INTO send_log (k, ts) VALUES (?,?)", (key, now))
+    return True
+
+def verify_turnstile(token, ip):
+    try:
+        req = urllib.request.Request("https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=json.dumps({"secret": TURNSTILE_SECRET, "response": token, "remoteip": ip}).encode(),
+            headers={"Content-Type": "application/json"})
+        return bool(json.load(urllib.request.urlopen(req, timeout=10)).get("success"))
+    except Exception:
+        return False
+
+def check_guards(ip):
+    """Returns None if allowed, else (http_code, message)."""
+    with lock:
+        if state["day"] != today():
+            state["day"], state["count"], state["ips"] = today(), 0, {}
+        now = time.time()
+        reqs = [t for t in state["ips"].get(ip, []) if now - t < 60]
+        state["ips"][ip] = reqs
+        if len(reqs) >= PER_IP_PER_MIN:
+            return 429, "Rate limit: too many requests from your address. Try again in a minute."
+        if sum(len([t for t in v if now - t < 60]) for v in state["ips"].values()) >= GLOBAL_PER_MIN:
+            return 429, "The demo is busy. Try again in a minute."
+        if state["count"] >= DAILY_CAP:
+            return 503, "Daily demo limit reached. Back tomorrow."
+        reqs.append(now)
+        state["count"] += 1
+        save_state()
+    return None
+
 import kb  # app/kb.py: embeddings, retrieval, classify, answer (shared with mcp_server.py)
 answer = kb.answer
 retrieve = kb.retrieve
@@ -149,8 +214,8 @@ body{font-family:system-ui;max-width:640px;margin:3em auto;padding:0 1em;color:#
 textarea{width:100%;height:5em;font-size:1em;padding:.5em}button{margin-top:.5em;padding:.6em 1.4em;font-size:1em}
 #out{white-space:pre-wrap;margin-top:1.5em;border-top:1px solid #ccc;padding-top:1em}
 small{color:#666}</style></head><body>
-<h1>OpenKB demo</h1>
-<p><small>Community-held knowledge base read by a small local model. Answers come only from the demo corpus and cite their source. Entries are sourced, not "true".</small></p>
+<h1>OpenKB v0.1 (Beta)</h1>
+<p><small>Community-held knowledge base read by a small local model. Answers come only from the test library and cite their source. Entries are sourced, not "true".</small></p>
 <textarea id=q maxlength=500 placeholder="Ask a question..."></textarea>
 <button onclick="ask()">Ask</button> <span id=msg></span>
 <div id=out></div>
@@ -188,13 +253,25 @@ class H(BaseHTTPRequestHandler):
         m = re.search(r"(?:^|;\s*)okv=([0-9a-f]{32})", self.headers.get("Cookie", ""))
         if m: return m.group(1), False
         return uuid.uuid4().hex, True
+    def _session(self):
+        m = re.search(r"(?:^|;\s*)oks=([0-9a-f]{48})", self.headers.get("Cookie", ""))
+        if not m: return None
+        c = db()
+        r = c.execute("SELECT owner, email, expires FROM sessions WHERE token_hash=?", (_h(m.group(1)),)).fetchone()
+        c.close()
+        if r and r[2] > time.time(): return {"owner": r[0], "email": r[1]}
+        return None
+    def _owner(self):
+        ses = self._session()
+        return (ses["owner"] if ses else self._vid)
     def _ck(self):
         if getattr(self, "_newv", False):
             self.send_header("Set-Cookie", "okv=%s; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax" % self._vid)
-    def _json(self, code, obj):
+    def _json(self, code, obj, extra=None):
         body = json.dumps(obj).encode()
         self.send_response(code); self.send_header("Content-Type", "application/json")
         self._ck()
+        for k, v in (extra or []): self.send_header(k, v)
         self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
     def _file(self, path):
         ext = os.path.splitext(path)[1].lower()
@@ -211,17 +288,27 @@ class H(BaseHTTPRequestHandler):
     def do_GET(self):
         self._vid, self._newv = self._visitor()
         path = self.path.split("?")[0]
+        if path.startswith("/api/auth/"):
+            return self._auth_post(path)
         if path == "/api/tasks":
-            return self._json(200, {"active": task_rows("active", self._vid), "archived": task_rows("done", self._vid)})
+            return self._json(200, {"active": task_rows("active", self._owner()), "archived": task_rows("done", self._owner())})
         m = re.match(r"^/api/tasks/([A-Za-z0-9-]+)$", path)
         if m:
             c = db()
-            t = c.execute("SELECT id, title, status, created_at FROM tasks WHERE id=? AND owner=?", (m.group(1), self._vid)).fetchone()
+            t = c.execute("SELECT id, title, status, created_at FROM tasks WHERE id=? AND owner=?", (m.group(1), self._owner())).fetchone()
             msgs = c.execute("SELECT role, text, sources, ts FROM messages WHERE task_id=? ORDER BY id", (m.group(1),)).fetchall()
             c.close()
             if not t: return self._json(404, {"error": "no such task"})
             return self._json(200, {"task": {"id": t[0], "title": t[1], "status": t[2], "created_at": t[3]},
                                     "messages": [{"role": r[0], "text": r[1], "sources": json.loads(r[2] or "[]"), "ts": r[3]} for r in msgs]})
+        if path == "/api/auth/me":
+            ses = self._session()
+            return self._json(200, {"email": ses["email"] if ses else None})
+        if path == "/api/auth/challenge":
+            a, b = secrets.randbelow(8) + 2, secrets.randbelow(8) + 2
+            cid = secrets.token_hex(8)
+            _challenges[cid] = (a + b, time.time() + 300)
+            return self._json(200, {"id": cid, "q": f"What is {a} + {b}? (bot check)"})
         if path == "/health":
             return self._json(200, {"ok": True, "count": state["count"], "cap": DAILY_CAP})
         # static Angular build; fall back to the old single page until the build exists
@@ -249,16 +336,16 @@ class H(BaseHTTPRequestHandler):
             tid = uuid.uuid4().hex[:12]
             c = db()
             c.execute("INSERT INTO tasks (id, title, status, created_at, owner) VALUES (?,?,?,?,?)",
-                      (tid, title or "New task", "active", datetime.now(timezone.utc).isoformat(), self._vid))
+                      (tid, title or "New task", "active", datetime.now(timezone.utc).isoformat(), self._owner()))
             c.commit(); c.close()
             return self._json(200, {"id": tid, "title": title or "New task"})
         m = re.match(r"^/api/tasks/([A-Za-z0-9-]+)/done$", path)
         if m:
             c = db()
-            t = c.execute("SELECT status FROM tasks WHERE id=? AND owner=?", (m.group(1), self._vid)).fetchone()
+            t = c.execute("SELECT status FROM tasks WHERE id=? AND owner=?", (m.group(1), self._owner())).fetchone()
             if not t: c.close(); return self._json(404, {"error": "no such task"})
             new = "done" if t[0] == "active" else "active"
-            c.execute("UPDATE tasks SET status=? WHERE id=? AND owner=?", (new, m.group(1), self._vid))
+            c.execute("UPDATE tasks SET status=? WHERE id=? AND owner=?", (new, m.group(1), self._owner()))
             c.commit(); c.close()
             return self._json(200, {"id": m.group(1), "status": new})
         if path != "/ask": return self._json(404, {"error": "not found"})
@@ -280,7 +367,7 @@ class H(BaseHTTPRequestHandler):
         if not q: return self._json(400, {"error": "empty question"})
         if task_id:
             c = db()
-            own = c.execute("SELECT 1 FROM tasks WHERE id=? AND owner=?", (task_id, self._vid)).fetchone()
+            own = c.execute("SELECT 1 FROM tasks WHERE id=? AND owner=?", (task_id, self._owner())).fetchone()
             c.close()
             if not own: return self._json(404, {"error": "no such task"})
         logline("ask", ip, q)
@@ -299,6 +386,91 @@ class H(BaseHTTPRequestHandler):
             logline("error", ip, str(e)[:300])
             send_mail_throttled("error", "[OpenKB demo] Error answering", f"IP: {ip}\nError: {str(e)[:300]}\n(Further error alerts muted for 10 min; all events are in the log.)")
             self._json(502, {"error": "The local model could not answer. Try again."})
+
+    def _auth_post(self, path):
+        try:
+            n = int(self.headers.get("Content-Length", 0))
+            if n > 4096: return self._json(413, {"error": "request too large"})
+            body = json.loads(self.rfile.read(n) or b"{}")
+        except Exception:
+            return self._json(400, {"error": "bad request"})
+        ip = self._ip()
+        now = time.time()
+        if path == "/api/auth/request-code":
+            email = (body.get("email") or "").strip().lower()
+            if not EMAIL_RE.match(email): return self._json(400, {"error": "Enter a valid email address."})
+            if TURNSTILE_SECRET:
+                if not verify_turnstile(body.get("turnstile") or "", ip):
+                    return self._json(403, {"error": "Bot check failed. Try again."})
+            else:
+                cid, ans = body.get("cid") or "", body.get("ans")
+                ch = _challenges.pop(cid, None)
+                try: ok = ch and ch[1] > now and int(ans) == ch[0]
+                except (TypeError, ValueError): ok = False
+                if not ok: return self._json(403, {"error": "Bot check failed. Try again."})
+            eh = _h(email)
+            c = db()
+            lock = c.execute("SELECT until FROM auth_locks WHERE email_hash=?", (eh,)).fetchone()
+            if lock and lock[0] > now:
+                c.close(); return self._json(429, {"error": "Too many attempts. Try again tomorrow."})
+            if not rate_hit(c, "e1:" + eh, 3, 3600) or not rate_hit(c, "e2:" + eh, 5, 86400):
+                c.commit(); c.close(); return self._json(429, {"error": "Too many codes requested for this address. Try again later."})
+            if not rate_hit(c, "ip:" + ip, 20, 3600):
+                c.commit(); c.close(); return self._json(429, {"error": "Too many requests. Try again later."})
+            code = f"{secrets.randbelow(1000000):06d}"
+            c.execute("INSERT OR REPLACE INTO auth_codes (email_hash, code_hash, expires, attempts) VALUES (?,?,?,0)",
+                      (eh, _h(code), now + CODE_TTL))
+            c.commit(); c.close()
+            logline("auth", ip, f"code requested for {_h(email)[:12]}")
+            try:
+                if not send_login_code(email, code):
+                    return self._json(503, {"error": "Email sign-in is not configured on this server. Anonymous mode still works."})
+            except Exception as e:
+                logline("error", ip, "login mail failed: " + str(e)[:200])
+                return self._json(502, {"error": "Could not send the sign-in email. Try again later."})
+            return self._json(200, {"sent": True})
+        if path == "/api/auth/verify":
+            email = (body.get("email") or "").strip().lower()
+            code = (body.get("code") or "").strip()
+            eh = _h(email)
+            c = db()
+            lock = c.execute("SELECT until FROM auth_locks WHERE email_hash=?", (eh,)).fetchone()
+            if lock and lock[0] > now:
+                c.close(); return self._json(429, {"error": "Too many attempts. Try again tomorrow."})
+            row = c.execute("SELECT code_hash, expires, attempts FROM auth_codes WHERE email_hash=?", (eh,)).fetchone()
+            if not row or row[1] < now:
+                c.close(); return self._json(400, {"error": "Code expired - request a new one."})
+            if row[2] >= 5:
+                c.close(); return self._json(400, {"error": "Too many wrong tries - request a new code."})
+            if _h(code) != row[0]:
+                att = row[2] + 1
+                if att >= 5:
+                    c.execute("DELETE FROM auth_codes WHERE email_hash=?", (eh,))
+                    c.execute("INSERT INTO send_log (k, ts) VALUES (?,?)", ("burn:" + eh, now))
+                    burns = c.execute("SELECT COUNT(*) FROM send_log WHERE k=? AND ts>?", ("burn:" + eh, now - 86400)).fetchone()[0]
+                    if burns >= 10:
+                        c.execute("INSERT OR REPLACE INTO auth_locks (email_hash, until) VALUES (?,?)", (eh, now + 86400))
+                else:
+                    c.execute("UPDATE auth_codes SET attempts=? WHERE email_hash=?", (att, eh))
+                c.commit(); c.close()
+                return self._json(400, {"error": "Wrong code. Check and try again."})
+            token = secrets.token_hex(24)
+            owner = "u:" + eh
+            c.execute("DELETE FROM auth_codes WHERE email_hash=?", (eh,))
+            c.execute("INSERT INTO sessions (token_hash, owner, email, expires) VALUES (?,?,?,?)",
+                      (_h(token), owner, email, now + 30 * 86400))
+            c.execute("UPDATE tasks SET owner=? WHERE owner=?", (owner, self._vid))
+            c.commit(); c.close()
+            logline("auth", ip, f"sign-in {_h(email)[:12]}")
+            return self._json(200, {"ok": True, "email": email},
+                              [("Set-Cookie", f"oks={token}; Path=/; Max-Age={30*86400}; HttpOnly; SameSite=Lax")])
+        if path == "/api/auth/logout":
+            m = re.search(r"(?:^|;\s*)oks=([0-9a-f]{48})", self.headers.get("Cookie", ""))
+            if m:
+                c = db(); c.execute("DELETE FROM sessions WHERE token_hash=?", (_h(m.group(1)),)); c.commit(); c.close()
+            return self._json(200, {"ok": True},
+                              [("Set-Cookie", "oks=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax")])
+        return self._json(404, {"error": "not found"})
 
 def daily_digest():
     while True:

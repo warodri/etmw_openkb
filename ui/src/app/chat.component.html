@@ -57,8 +57,18 @@
         class="md:hidden w-11 h-11 -ml-2 shrink-0 flex items-center justify-center rounded-lg text-xl cursor-pointer bg-transparent border-0 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         [attr.aria-label]="sidebarOpen() ? 'Close task list' : 'Open task list'"
         (click)="sidebarOpen.set(!sidebarOpen())">☰</button>
-      <span class="flex-1 text-[15px] font-semibold truncate">{{ task()?.title || 'OpenKB demo' }}</span>
+      <span class="flex-1 text-[15px] font-semibold truncate">{{ task()?.title || 'OpenKB v0.1 (Beta)' }}</span>
       <div class="flex items-center gap-2 shrink-0">
+        @if (userEmail()) {
+          <span class="hidden md:inline text-[13px] text-neutral-500 dark:text-neutral-400 max-w-[180px] truncate">{{ userEmail() }}</span>
+          <button
+            class="px-3 py-1.5 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer bg-transparent"
+            (click)="logout()">Sign out</button>
+        } @else {
+          <button
+            class="px-3 py-1.5 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer bg-transparent"
+            (click)="openAuth()">Sign in</button>
+        }
         @if (task()) {
           <button
             class="px-3 py-1.5 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer bg-transparent"
@@ -192,6 +202,46 @@
       }
 
       
+    </div>
+  </div>
+}
+
+
+@if (authOpen()) {
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-40 p-3" (click)="authOpen.set(false)">
+    <div class="relative w-full max-w-sm rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 px-5 py-6 leading-relaxed text-[14.5px]" (click)="$event.stopPropagation()">
+      <button class="absolute top-2.5 right-2.5 w-11 h-11 flex items-center justify-center bg-transparent border-0 text-2xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer" aria-label="Close" (click)="authOpen.set(false)">×</button>
+      <h2 class="mt-0 mb-1 text-lg font-semibold">Sign in</h2>
+      <p class="mt-0 mb-4 text-[13px] text-neutral-500 dark:text-neutral-400">No password - we email you a one-time code. We store your email to sign you in and your tasks to show them back to you; nothing else.</p>
+
+      @if (authStep() === 'email') {
+        <label class="block text-[13px] mb-1">Your email</label>
+        <input type="email" [(ngModel)]="authEmail" autocomplete="email"
+          class="w-full mb-3 px-3.5 py-3 min-h-[44px] rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-base outline-none focus:border-neutral-500 dark:focus:border-neutral-400"
+          placeholder="you@example.com">
+        <label class="block text-[13px] mb-1">{{ authQ || 'Loading bot check...' }}</label>
+        <input type="text" [(ngModel)]="authAns" inputmode="numeric"
+          class="w-full mb-4 px-3.5 py-3 min-h-[44px] rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-base outline-none focus:border-neutral-500 dark:focus:border-neutral-400"
+          placeholder="Your answer">
+        <button
+          class="w-full py-3 min-h-[44px] rounded-xl border-0 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900 text-[15px] font-semibold cursor-pointer disabled:opacity-40"
+          [disabled]="authBusy() || !authEmail.trim() || !authAns.trim()"
+          (click)="requestCode()">{{ authBusy() ? 'Sending...' : 'Email me a code' }}</button>
+      } @else {
+        <p class="text-[13.5px]">Code sent to <span class="font-semibold">{{ authEmail }}</span>. It is valid for 10 minutes.</p>
+        <label class="block text-[13px] mb-1">6-digit code</label>
+        <input type="text" [(ngModel)]="authCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+          class="w-full mb-4 px-3.5 py-3 min-h-[44px] rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-base tracking-[0.3em] font-mono outline-none focus:border-neutral-500 dark:focus:border-neutral-400"
+          placeholder="000000">
+        <button
+          class="w-full py-3 min-h-[44px] rounded-xl border-0 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900 text-[15px] font-semibold cursor-pointer disabled:opacity-40"
+          [disabled]="authBusy() || authCode.trim().length !== 6"
+          (click)="verifyCode()">{{ authBusy() ? 'Checking...' : 'Sign in' }}</button>
+      }
+
+      @if (authError()) {
+        <div class="mt-3 px-3.5 py-2.5 rounded-lg text-sm bg-red-50 border border-red-200 text-red-800 dark:bg-[#3a2424] dark:border-[#5a3030] dark:text-[#e0b0b0]">{{ authError() }}</div>
+      }
     </div>
   </div>
 }

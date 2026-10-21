@@ -23,11 +23,73 @@ export class ChatComponent implements OnInit {
   panel = signal<'how' | 'donate' | null>(null);
   showArchived = signal(false);
   sidebarOpen = signal(false);
+  userEmail = signal<string | null>(null);
+  authOpen = signal(false);
+  authStep = signal<'email' | 'code'>('email');
+  authBusy = signal(false);
+  authError = signal<string | null>(null);
+  authEmail = '';
+  authAns = '';
+  authCode = '';
+  authQ = '';
+  private authCid = '';
   input = '';
 
   ngOnInit(): void {
     this.refresh();
+    this.api.authMe().subscribe({ next: (r) => this.userEmail.set(r.email), error: () => {} });
   }
+
+  openAuth(): void {
+    this.authError.set(null);
+    this.authStep.set('email');
+    this.authOpen.set(true);
+    this.sidebarOpen.set(false);
+    this.api.authChallenge().subscribe({
+      next: (r) => { this.authCid = r.id; this.authQ = r.q; },
+      error: () => this.authError.set('Could not start sign-in. Try again.'),
+    });
+  }
+
+  requestCode(): void {
+    const email = this.authEmail.trim();
+    if (!email || this.authBusy()) return;
+    this.authBusy.set(true);
+    this.authError.set(null);
+    this.api.authRequestCode(email, this.authCid, this.authAns.trim()).subscribe({
+      next: () => { this.authBusy.set(false); this.authStep.set('code'); },
+      error: (e) => {
+        this.authBusy.set(false);
+        this.authError.set(e?.error?.error || 'Could not send the code. Try again.');
+        this.api.authChallenge().subscribe({ next: (r) => { this.authCid = r.id; this.authQ = r.q; }, error: () => {} });
+      },
+    });
+  }
+
+  verifyCode(): void {
+    const code = this.authCode.trim();
+    if (!code || this.authBusy()) return;
+    this.authBusy.set(true);
+    this.authError.set(null);
+    this.api.authVerify(this.authEmail.trim(), code).subscribe({
+      next: (r) => {
+        this.authBusy.set(false);
+        this.userEmail.set(r.email);
+        this.authOpen.set(false);
+        this.authEmail = ''; this.authAns = ''; this.authCode = '';
+        this.refresh();
+      },
+      error: (e) => {
+        this.authBusy.set(false);
+        this.authError.set(e?.error?.error || 'Could not verify the code.');
+      },
+    });
+  }
+
+  logout(): void {
+    this.api.authLogout().subscribe({ next: () => { this.userEmail.set(null); this.refresh(); }, error: () => {} });
+  }
+
 
   openPanel(p: 'how' | 'donate'): void {
     this.panel.set(p);

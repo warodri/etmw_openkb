@@ -37,6 +37,16 @@ export interface AskResponse {
 export class ApiService {
   private http = inject(HttpClient);
 
+  authMe() { return this.http.get<{ email: string | null }>('/api/auth/me'); }
+  authChallenge() { return this.http.get<{ id: string; q: string }>('/api/auth/challenge'); }
+  authRequestCode(email: string, cid: string, ans: string) {
+    return this.http.post<{ sent: boolean }>('/api/auth/request-code', { email, cid, ans });
+  }
+  authVerify(email: string, code: string) {
+    return this.http.post<{ ok: boolean; email: string }>('/api/auth/verify', { email, code });
+  }
+  authLogout() { return this.http.post<{ ok: boolean }>('/api/auth/logout', {}); }
+
   listTasks(): Observable<TaskList> {
     return this.http.get<TaskList>('/api/tasks');
   }
