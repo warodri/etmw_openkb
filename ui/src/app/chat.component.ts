@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ThemeService } from './theme.service';
@@ -110,6 +110,31 @@ export class ChatComponent implements OnInit {
   panel = signal<'how' | 'donate' | null>(null);
   showArchived = signal(false);
   sidebarOpen = signal(false);
+  desktopOpen = signal(typeof localStorage === 'undefined' || localStorage.getItem('okb-sidebar') !== 'closed');
+  searching = signal(false);
+  query = signal('');
+  filteredActive = computed(() => this.filterTasks(this.active()));
+  filteredArchived = computed(() => this.filterTasks(this.archived()));
+
+  private filterTasks(list: Task[]): Task[] {
+    const q = this.query().trim().toLowerCase();
+    return q ? list.filter((x) => x.title.toLowerCase().includes(q)) : list;
+  }
+
+  toggleSidebar(): void {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      this.desktopOpen.update((v) => !v);
+      try { localStorage.setItem('okb-sidebar', this.desktopOpen() ? 'open' : 'closed'); } catch {}
+    } else {
+      this.sidebarOpen.update((v) => !v);
+    }
+  }
+
+  toggleSearch(): void {
+    this.searching.update((v) => !v);
+    if (!this.searching()) this.query.set('');
+    else setTimeout(() => (document.querySelector('aside input[type=search]') as HTMLInputElement | null)?.focus());
+  }
   userEmail = signal<string | null>(null);
   authOpen = signal(false);
   authStep = signal<'email' | 'code'>('email');

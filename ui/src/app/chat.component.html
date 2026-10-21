@@ -4,27 +4,31 @@
   }
   <aside
     class="fixed inset-y-0 left-0 z-30 w-72 max-w-[85vw] transform transition-transform duration-200 ease-out md:static md:z-auto md:w-64 md:min-w-64 md:max-w-none md:translate-x-0 bg-neutral-100 dark:bg-[#171717] flex flex-col p-3 border-r border-neutral-200 dark:border-neutral-800"
-    [class.-translate-x-full]="!sidebarOpen()">
-    <div class="flex items-center justify-between px-2 pt-1 pb-3">
+    [class.-translate-x-full]="!sidebarOpen()"
+    [class.sidebar-collapsed]="!desktopOpen()">
+    <div class="flex items-center justify-between px-2 pt-1 pb-2">
       <div class="text-lg font-semibold">OpenKB</div>
-      <button
-        class="md:hidden w-11 h-11 -mr-2 flex items-center justify-center rounded-lg text-xl text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 cursor-pointer bg-transparent border-0"
-        aria-label="Close task list"
-        (click)="sidebarOpen.set(false)">×</button>
+      <div class="flex items-center -mr-2">
+        <button class="w-10 h-10 flex items-center justify-center rounded-lg text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 cursor-pointer bg-transparent border-0" aria-label="Search tasks" title="Search tasks" (click)="toggleSearch()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+        <button class="w-10 h-10 flex items-center justify-center rounded-lg text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 cursor-pointer bg-transparent border-0" aria-label="Close sidebar" title="Close sidebar" (click)="toggleSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button>
+      </div>
     </div>
+    @if (searching()) {
+      <input #sq class="w-full mb-2 px-3 py-2 min-h-[40px] rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base md:text-sm outline-none focus:border-neutral-500" type="search" placeholder="Search tasks" aria-label="Search tasks" [value]="query()" (input)="query.set(sq.value)" (keydown.escape)="toggleSearch()">
+    }
     <button
-      class="w-full py-2.5 min-h-[44px] mb-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-sm cursor-pointer"
-      (click)="newTask()">+ New task</button>
+      class="w-full flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] mb-3 rounded-lg bg-neutral-200/70 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-sm cursor-pointer border-0 text-left text-neutral-800 dark:text-neutral-100"
+      (click)="newTask()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> New task</button>
 
     <div class="text-xs uppercase text-neutral-500 dark:text-neutral-400 px-2 py-1">Tasks</div>
     <div class="flex flex-col gap-0.5 overflow-y-auto">
-      @for (t of active(); track t.id) {
+      @for (t of filteredActive(); track t.id) {
         <button
           class="text-left px-2 py-2 min-h-[44px] rounded-md text-sm truncate cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-800"
           [class.task-selected]="task()?.id === t.id"
           (click)="openTask(t)">{{ t.title }}</button>
       } @empty {
-        <div class="text-neutral-400 dark:text-neutral-500 text-[13px] px-2 py-2">No open tasks</div>
+        <div class="text-neutral-400 dark:text-neutral-500 text-[13px] px-2 py-2">{{ query() ? 'No matching tasks' : 'No open tasks' }}</div>
       }
     </div>
 
@@ -35,7 +39,7 @@
     </button>
     @if (showArchived()) {
       <div class="flex flex-col gap-0.5 overflow-y-auto">
-        @for (t of archived(); track t.id) {
+        @for (t of filteredArchived(); track t.id) {
           <button
             class="text-left px-2 py-2 min-h-[44px] rounded-md text-sm truncate cursor-pointer text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800"
             [class.task-selected]="task()?.id === t.id"
@@ -45,19 +49,20 @@
     }
 
     <div class="mt-auto flex flex-col gap-0.5 border-t border-neutral-200 dark:border-neutral-800 pt-2">
-      <a routerLink="/how" class="px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)">How this works</a>
-      <a routerLink="/donate" class="px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)">Donate knowledge</a>
-      <a routerLink="/agent" class="px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)">Agent mode</a>
-      <a routerLink="/host" class="px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)">Host it yourself</a>
+      <a routerLink="/how" class="px-2 py-2 min-h-[44px] flex items-center gap-2.5 rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg> How this works</a>
+      <a routerLink="/donate" class="px-2 py-2 min-h-[44px] flex items-center gap-2.5 rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg> Donate knowledge</a>
+      <a routerLink="/agent" class="px-2 py-2 min-h-[44px] flex items-center gap-2.5 rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 7V4M9 13h.01M15 13h.01"/></svg> Agent mode</a>
+      <a routerLink="/host" class="px-2 py-2 min-h-[44px] flex items-center gap-2.5 rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg> Host it yourself</a>
     </div>
   </aside>
 
   <main class="flex-1 flex flex-col min-w-0">
     <header class="flex justify-between items-center gap-2 px-3 md:px-5 py-3 border-b border-neutral-200 dark:border-neutral-800">
       <button
-        class="md:hidden w-11 h-11 -ml-2 shrink-0 flex items-center justify-center rounded-lg text-xl cursor-pointer bg-transparent border-0 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-        [attr.aria-label]="sidebarOpen() ? 'Close task list' : 'Open task list'"
-        (click)="sidebarOpen.set(!sidebarOpen())">☰</button>
+        class="hdr-toggle w-11 h-11 -ml-2 shrink-0 flex items-center justify-center rounded-lg cursor-pointer bg-transparent border-0 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+        [class.show-desktop]="!desktopOpen()"
+        [attr.aria-label]="'Open sidebar'" title="Open sidebar"
+        (click)="toggleSidebar()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="shrink-0"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button>
       <span class="flex-1 text-[15px] font-semibold truncate">{{ task()?.title || 'OpenKB v0.1 (Beta)' }}</span>
       <div class="flex items-center gap-2 shrink-0">
         @if (userEmail()) {
@@ -90,7 +95,7 @@
     <section #scroller (scroll)="onScroll()" class="flex-1 overflow-y-auto p-3 md:p-5">
       @if (!task()) {
         <div class="max-w-xl mx-auto mt-[8vh] md:mt-[15vh] text-center text-neutral-500 dark:text-neutral-400">
-          <h1 class="text-xl md:text-2xl font-semibold text-neutral-800 dark:text-neutral-200">OpenKB is the first model you can run locally and have the same result as any frontier models you may know. It answers from a growing open library the community populates constantly</h1>
+          <h1 class="text-xl md:text-2xl font-normal leading-snug text-neutral-800 dark:text-neutral-200">OpenKB is the first model you can run locally and have the same result as any frontier models you may know. It answers from a growing open library the community populates constantly</h1>
         </div>
       } @else if (messages().length === 0) {
         <div class="max-w-xl mx-auto mt-[8vh] md:mt-[15vh] text-center text-neutral-500 dark:text-neutral-400">
