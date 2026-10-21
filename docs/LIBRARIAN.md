@@ -80,6 +80,10 @@ Anyone can point their own model or agent at an OpenKB instance.
 
 ## Decisions (Walter, 21 Oct)
 
+- **Machine-gathered content: option (a) - public domain / CC0 only.** The
+  librarian may gather only public-domain and CC0 texts. News and anything
+  else non-PD stays out for now. This settles open problem 1b. The rule is
+  approved; the librarian BUILD is not - spec only until Walter says build.
 - **Books are retrieval-only.** Book content gets a retrieval-only permission:
   index it, answer with citations, never redistribute the text itself. This
   matches option (c) in open problem 1b, decided specifically for books. The
@@ -100,7 +104,9 @@ Anyone can point their own model or agent at an OpenKB instance.
    pool; (b) allow CC BY / CC BY-SA with attribution plumbing and license-compatibility
    checks - bigger pool, real legal surface; (c) retrieval-only for gathered content -
    index it, answer with citations, never redistribute the text itself, link out -
-   weakest library, safest legally. Needs Walter's decision before any build - books are already decided this way (see Decisions above); the pick remains open for everything else.
+   weakest library, safest legally. DECIDED (Walter, 21 Oct): option (a) - public
+   domain / CC0 only; see Decisions above. Books follow the retrieval-only pattern
+   separately, also decided above.
 2. **Takedown.** Consent-based takedown assumes a donor. Gathered content needs:
    delete-by-source using the provenance record (tractable, designed in above), a
    public takedown contact, and honoring removal requests even when the license
