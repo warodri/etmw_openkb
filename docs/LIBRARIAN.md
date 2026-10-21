@@ -78,6 +78,14 @@ Anyone can point their own model or agent at an OpenKB instance.
   conversion, dedupe check (with the "already covered" response when it matches),
   provenance record, maintainer review. A plug-in can never publish directly.
 
+## Decisions (Walter, 21 Oct)
+
+- **Books are retrieval-only.** Book content gets a retrieval-only permission:
+  index it, answer with citations, never redistribute the text itself. This
+  matches option (c) in open problem 1b, decided specifically for books. The
+  general licensing pick for other machine-gathered content (a/b/c below) is
+  still pending Walter's choice.
+
 ## Open problems
 
 1. **News summaries vs copyright.** The news design (link + short factual summary +
@@ -92,7 +100,7 @@ Anyone can point their own model or agent at an OpenKB instance.
    pool; (b) allow CC BY / CC BY-SA with attribution plumbing and license-compatibility
    checks - bigger pool, real legal surface; (c) retrieval-only for gathered content -
    index it, answer with citations, never redistribute the text itself, link out -
-   weakest library, safest legally. Needs Walter's decision before any build.
+   weakest library, safest legally. Needs Walter's decision before any build - books are already decided this way (see Decisions above); the pick remains open for everything else.
 2. **Takedown.** Consent-based takedown assumes a donor. Gathered content needs:
    delete-by-source using the provenance record (tractable, designed in above), a
    public takedown contact, and honoring removal requests even when the license

@@ -41,4 +41,4 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 
 - **"Host it yourself" as a full page** (2026-10-21, commit af8bfd9): /host route
   with step-by-step guide, disk-size chart, install flow + architecture diagrams,
-  troubleshooting; replaced the popup.
+  troubleshooting; replaced the popup. Approved by Walter 21 Oct ("this is a yes").

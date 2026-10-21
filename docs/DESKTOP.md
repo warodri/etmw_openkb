@@ -63,9 +63,11 @@ and loud only where they must be.
 - **Confirmation only for destructive or irreversible actions**: delete,
   overwrite, send, spend, shell commands outside the profile's scope. These
   ask every time, in the moment, no matter the profile.
-- **Telegram remains the audit trail**: every acting session sends "started
-  using your computer for X" / "task X completed" (plus the opt-out-able email
-  notice), so even quiet, pre-approved actions leave a visible record.
+- **Telegram remains the audit trail**: every acting session sends a short
+  "I'm starting to work on your computer now" when it starts and an "All done"
+  when it finishes (plus the opt-out-able email notice), so even quiet,
+  pre-approved actions leave a visible record. No task detail by default -
+  people don't read much (Walter, 21 Oct).
 - Every active profile is visible in the UI and revocable in one click; the
   opencode agent profile enforces the same boundary in software (edit/shell
   denied outside granted scopes).
@@ -78,10 +80,9 @@ and loud only where they must be.
   model pull, no toolchain, no warnings - versus building from source with
   Xcode/.NET and accepting OS warnings.
 - **The Telegram condition**: a client that acts on the computer must be
-  connected to the user's Telegram. Every time it starts acting it sends
-  "started using your computer for X"; when it finishes it sends
-  "task X completed". An email notice is also sent; email can be opted out,
-  Telegram cannot.
+  connected to the user's Telegram. Notices go out only at task start and task
+  end, kept very brief and friendly, with no task detail by default. An email
+  notice is also sent; email can be opted out, Telegram cannot.
 
 ### Honest analysis of the Telegram condition
 
@@ -94,29 +95,30 @@ official signed app.
 
 **(b) Tension with "nothing leaves your machine."** A Telegram message and an
 email leave the machine by definition. The honest fix is to make the content
-minimal and say so: by default the notice carries only the task title, not the
-task content ("started using your computer for: reorganise invoices" - not the
-files or text involved). Offer a redacted mode where the notice is only
-"started using your computer" with no task text at all. The README and the
-panel should state plainly that act-notifications leave the machine, and that
-everything else does not.
+minimal and say so: by default the notice carries no task detail at all, only
+that work started and that it finished ("people don't read much" - Walter, 21
+Oct). The user can opt into including the task title; the task content itself
+is never included. The README and the panel should state plainly that
+act-notifications leave the machine, and that everything else does not.
 
 **(c) Infra and cost.** Telegram: the Bot API is free; a small bot service
 (registration + message relay) runs on ETMW's existing server - marginal cost
 near zero. Email: ETMW already runs SMTP for alerts, so per-user notice email
 reuses that. Real costs are the signing identities (below), not the messaging.
 
-Sample notice wording (friendly, plain, human - Walter, 21 Oct):
+Sample notice wording (very brief, friendly, no task detail by default -
+Walter, 21 Oct):
 
-- Start: "Hi! I'm starting to work on your computer now: {task title}.
-  I'll message you right here when it's done."
-- Finish: "All done - {task title} is finished. If anything looks off, just
-  reply to this message."
+- Start: "Hi! I'm starting to work on your computer now. I'll message you
+  right here when I'm done."
+- Finish: "All done! If anything looks off, just reply to this message."
 - Blocked (Telegram unreachable): "I couldn't reach you here, so I paused
   instead of working unsupervised. I'll pick things up as soon as the
   connection is back."
 
-The task title is the default level of detail; redacted mode drops it.
+Notices fire only at task start and task end - never mid-task chatter. The
+task title is opt-in detail the user can switch on; the default is no task
+text at all.
 
 **(d) Failure behaviour.** If Telegram is unreachable when the client wants to
 act, the client does not act. No silent proceed, no queue-and-go: the action is
