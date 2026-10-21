@@ -168,13 +168,7 @@ export class ChatComponent implements OnInit {
     this.error.set(null);
     this.messages.update((m) => [...m, { role: 'user', text }]);
     this.api.ask(text, taskId).subscribe({
-      next: (r) => {
-        this.messages.update((m) => [
-          ...m,
-          { role: 'assistant', text: r.answer, sources: r.sources, not_found: r.not_found },
-        ]);
-        this.busy.set(false);
-      },
+      next: (r) => this.typeOut(r.answer, r.sources, r.not_found),
       error: (e) => {
         this.busy.set(false);
         this.error.set(
@@ -183,6 +177,26 @@ export class ChatComponent implements OnInit {
         );
       },
     });
+  }
+
+  /** Client-side typewriter: the full answer is already here; reveal it quickly,
+   *  then show sources and the refusal box at the end. The server answer is unchanged. */
+  private typeOut(full: string, sources: string[], notFound: boolean): void {
+    const finish = () => {
+      this.messages.update((m) => [...m.slice(0, -1), { role: 'assistant', text: full, sources, not_found: notFound }]);
+      this.busy.set(false);
+    };
+    const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !full) { this.messages.update((m) => [...m, { role: 'assistant', text: '' }]); finish(); return; }
+    this.messages.update((m) => [...m, { role: 'assistant', text: '' }]);
+    const tickMs = 20;
+    const step = Math.max(1, Math.ceil(full.length / (2500 / tickMs)));
+    let i = 0;
+    const timer = setInterval(() => {
+      i = Math.min(full.length, i + step);
+      if (i >= full.length) { clearInterval(timer); finish(); return; }
+      this.messages.update((m) => [...m.slice(0, -1), { role: 'assistant', text: full.slice(0, i) }]);
+    }, tickMs);
   }
 
   onKeydown(ev: KeyboardEvent): void {
