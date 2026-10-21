@@ -1,4 +1,4 @@
-/* Component styles are Tailwind utility classes in app.html; the few
+/* Component styles are Tailwind utility classes in chat.component.html; the few
    two-theme conditional states live here because Angular class bindings
    cannot express Tailwind dark: variants cleanly. :host-context(.dark)
    reaches the theme class on <html> without view-encapsulation scoping

@@ -47,7 +47,7 @@
     <div class="mt-auto flex flex-col gap-0.5 border-t border-neutral-200 dark:border-neutral-800 pt-2">
       <button class="text-left px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer bg-transparent border-0" (click)="openPanel('how')">How this works</button>
       <button class="text-left px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer bg-transparent border-0" (click)="openPanel('donate')">Donate knowledge</button>
-      <button class="text-left px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer bg-transparent border-0" (click)="openPanel('janus')">Host it yourself</button>
+      <a routerLink="/host" class="px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)">Host it yourself</a>
     </div>
   </aside>
 
@@ -68,9 +68,9 @@
         }
         <button
           class="px-3 py-1.5 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] cursor-pointer bg-transparent"
-          [attr.aria-label]="dark() ? 'Switch to light mode' : 'Switch to dark mode'"
-          (click)="toggleTheme()">
-          {{ dark() ? '☀ Light' : '☾ Dark' }}
+          [attr.aria-label]="theme.dark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          (click)="theme.toggle()">
+          {{ theme.dark() ? '☀ Light' : '☾ Dark' }}
         </button>
       </div>
     </header>
@@ -191,18 +191,7 @@
         <p class="italic text-neutral-500 dark:text-neutral-400">Donations open soon - the consent review is being finalised.</p>
       }
 
-      @if (panel() === 'janus') {
-        <h2 class="mt-0">Host it yourself</h2>
-        <p>OpenKB works fully on your own computer - nothing here requires a hosted service.</p>
-        <p>If you want to reach it from the internet, Janus (an ETMW product) opens a secure tunnel
-           from your machine to a public address in one command - no router setup, no accounts to juggle.</p>
-        <ol>
-          <li>Install Janus on the machine running OpenKB.</li>
-          <li>Run <code class="bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded">janus open openkb:8641</code>.</li>
-          <li>Share the address it prints.</li>
-        </ol>
-        <p>Optional. OpenKB works fully without it.</p>
-      }
+      
     </div>
   </div>
 }

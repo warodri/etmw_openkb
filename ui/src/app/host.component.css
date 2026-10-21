@@ -1,0 +1,12 @@
+/* Pixel-sharp diagram rendering + two-theme diagram colors. */
+.pixel-diagram { shape-rendering: crispEdges; }
+.diagram-box { fill: #ffffff; stroke: #525252; stroke-width: 2; }
+.diagram-box-accent { fill: #e5e5e5; stroke: #262626; stroke-width: 2; }
+.diagram-line { stroke: #737373; stroke-width: 2; }
+.diagram-text { fill: #262626; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.diagram-sub { fill: #737373; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+:host-context(.dark) .diagram-box { fill: #262626; stroke: #a3a3a3; }
+:host-context(.dark) .diagram-box-accent { fill: #404040; stroke: #e5e5e5; }
+:host-context(.dark) .diagram-line { stroke: #a3a3a3; }
+:host-context(.dark) .diagram-text { fill: #e5e5e5; }
+:host-context(.dark) .diagram-sub { fill: #a3a3a3; }

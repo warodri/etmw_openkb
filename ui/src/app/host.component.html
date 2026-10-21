@@ -1,0 +1,149 @@
+<div class="min-h-screen bg-white text-neutral-800 dark:bg-[#212121] dark:text-neutral-200 font-sans">
+  <header class="flex items-center gap-2 px-3 md:px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 bg-white dark:bg-[#212121] z-10">
+    <a routerLink="/" class="w-11 h-11 -ml-2 shrink-0 flex items-center justify-center rounded-lg text-xl no-underline text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Back to the app">←</a>
+    <span class="flex-1 text-[15px] font-semibold truncate">Host it yourself</span>
+    <button
+      class="px-3 py-1.5 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] cursor-pointer bg-transparent"
+      [attr.aria-label]="theme.dark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      (click)="theme.toggle()">
+      {{ theme.dark() ? '☀ Light' : '☾ Dark' }}
+    </button>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-4 md:px-6 pb-16 leading-relaxed text-[15px]">
+
+    <div class="flex items-start gap-4 mt-8 mb-10">
+      <img src="robot-library.png" alt="Libby, the library robot" class="w-20 h-20 md:w-24 md:h-24 shrink-0 [image-rendering:pixelated]">
+      <div>
+        <h1 class="m-0 mb-2 text-2xl md:text-3xl font-semibold text-neutral-800 dark:text-neutral-100">Host it yourself</h1>
+        <p class="m-0 text-neutral-500 dark:text-neutral-400">OpenKB runs fully on your own computer: the web app, the local reader,
+          and the library. Nothing here requires a hosted service. This page walks you from zero to answering.</p>
+      </div>
+    </div>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">1. What you need</h2>
+    <ul class="pl-5 space-y-1.5">
+      <li>Python 3.9 or newer - no packages to install, the server is standard library only.</li>
+      <li><a class="underline" href="https://ollama.com" target="_blank" rel="noopener">Ollama</a>, running locally.</li>
+      <li>Node.js 20 or newer - only to build the UI; the API works without it.</li>
+      <li><a class="underline" href="https://opencode.ai" target="_blank" rel="noopener">opencode</a> - only if you want agent mode.</li>
+      <li>About 25 GB of free disk for the models.</li>
+    </ul>
+
+    <div class="mt-5 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4">
+      <div class="text-xs uppercase text-neutral-500 dark:text-neutral-400 mb-3">Disk the models take</div>
+      <div class="space-y-2.5 font-mono text-[12.5px]">
+        <div>
+          <div class="flex justify-between mb-1"><span>qwen3.6:35b-a3b (reader)</span><span>22.6 GB</span></div>
+          <div class="h-3.5 bg-neutral-100 dark:bg-neutral-800 rounded-sm"><div class="h-3.5 rounded-sm bg-neutral-800 dark:bg-neutral-200" style="width: 90%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-1"><span>qwen3-embedding:4b (embeddings)</span><span>2.5 GB</span></div>
+          <div class="h-3.5 bg-neutral-100 dark:bg-neutral-800 rounded-sm"><div class="h-3.5 rounded-sm bg-neutral-500 dark:bg-neutral-400" style="width: 10%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-1"><span>app + library index</span><span>~0.2 GB</span></div>
+          <div class="h-3.5 bg-neutral-100 dark:bg-neutral-800 rounded-sm"><div class="h-3.5 rounded-sm bg-neutral-400 dark:bg-neutral-500" style="width: 2%"></div></div>
+        </div>
+      </div>
+      <p class="mt-3 mb-0 text-[13px] text-neutral-500 dark:text-neutral-400">Any recent Mac or PC with 16 GB RAM runs it. More RAM helps; the reader is a small model that activates only a slice per token.</p>
+    </div>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">2. Install</h2>
+    <p>One script does the whole setup:</p>
+    <pre class="overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3 font-mono text-[13.5px]">./install.sh</pre>
+
+    <div class="mt-5 flex flex-wrap items-stretch gap-2 font-mono text-[12px] text-center">
+      <div class="flex-1 min-w-[104px] border-2 border-neutral-500 dark:border-neutral-400 px-2 py-2.5">Check tools<br><span class="text-neutral-500 dark:text-neutral-400">python3, ollama, node</span></div>
+      <div class="self-center text-neutral-400">→</div>
+      <div class="flex-1 min-w-[104px] border-2 border-neutral-500 dark:border-neutral-400 px-2 py-2.5">Pull models<br><span class="text-neutral-500 dark:text-neutral-400">~25 GB once</span></div>
+      <div class="self-center text-neutral-400">→</div>
+      <div class="flex-1 min-w-[104px] border-2 border-neutral-500 dark:border-neutral-400 px-2 py-2.5">Get library index<br><span class="text-neutral-500 dark:text-neutral-400">copy, download, rebuild</span></div>
+      <div class="self-center text-neutral-400">→</div>
+      <div class="flex-1 min-w-[104px] border-2 border-neutral-500 dark:border-neutral-400 px-2 py-2.5">Build UI<br><span class="text-neutral-500 dark:text-neutral-400">npm</span></div>
+      <div class="self-center text-neutral-400">→</div>
+      <div class="flex-1 min-w-[104px] border-2 border-neutral-800 dark:border-neutral-200 bg-neutral-100 dark:bg-neutral-800 px-2 py-2.5">opencode.json<br><span class="text-neutral-500 dark:text-neutral-400">agent mode ready</span></div>
+    </div>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">3. First run</h2>
+    <pre class="overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 px-4 py-3 font-mono text-[13.5px]">python3 app/server.py
+# UI and API on http://127.0.0.1:8641</pre>
+    <p>Open <code class="bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded font-mono text-[13.5px]">http://127.0.0.1:8641</code>,
+      ask a question. The first answer can take a minute while the reader model loads; after that it stays warm.
+      Every answer names the documents it used - sources, not truth.</p>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">4. How the pieces fit</h2>
+    <svg class="pixel-diagram w-full max-w-xl" viewBox="0 0 640 400" role="img" aria-label="Architecture diagram: browser talks to the OpenKB server, which uses the library index and local Ollama models; opencode reaches the same library through a read-only MCP bridge.">
+      <!-- browser -->
+      <rect class="diagram-box" x="20" y="20" width="180" height="56"/>
+      <text class="diagram-text" x="110" y="44" text-anchor="middle" font-size="14">Your browser</text>
+      <text class="diagram-sub" x="110" y="64" text-anchor="middle" font-size="11">phone or desktop</text>
+      <!-- server -->
+      <rect class="diagram-box-accent" x="300" y="20" width="320" height="56"/>
+      <text class="diagram-text" x="460" y="44" text-anchor="middle" font-size="14">app/server.py  :8641</text>
+      <text class="diagram-sub" x="460" y="64" text-anchor="middle" font-size="11">UI + JSON API, guards built in</text>
+      <line class="diagram-line" x1="200" y1="48" x2="300" y2="48"/>
+      <polyline class="diagram-line" fill="none" points="292,42 300,48 292,54"/>
+      <!-- library -->
+      <rect class="diagram-box" x="300" y="140" width="150" height="70"/>
+      <text class="diagram-text" x="375" y="168" text-anchor="middle" font-size="13">Library index</text>
+      <text class="diagram-sub" x="375" y="188" text-anchor="middle" font-size="11">data/ - donated docs</text>
+      <!-- ollama -->
+      <rect class="diagram-box" x="470" y="140" width="150" height="70"/>
+      <text class="diagram-text" x="545" y="162" text-anchor="middle" font-size="13">Ollama (local)</text>
+      <text class="diagram-sub" x="545" y="180" text-anchor="middle" font-size="10">reader qwen3.6:35b-a3b</text>
+      <text class="diagram-sub" x="545" y="196" text-anchor="middle" font-size="10">embed qwen3-embedding:4b</text>
+      <line class="diagram-line" x1="400" y1="76" x2="375" y2="140"/>
+      <line class="diagram-line" x1="520" y1="76" x2="545" y2="140"/>
+      <!-- opencode -->
+      <rect class="diagram-box" x="20" y="300" width="180" height="56"/>
+      <text class="diagram-text" x="110" y="324" text-anchor="middle" font-size="14">opencode</text>
+      <text class="diagram-sub" x="110" y="344" text-anchor="middle" font-size="11">agent mode, optional</text>
+      <!-- mcp bridge -->
+      <rect class="diagram-box" x="300" y="300" width="320" height="56"/>
+      <text class="diagram-text" x="460" y="324" text-anchor="middle" font-size="14">MCP bridge (read-only)</text>
+      <text class="diagram-sub" x="460" y="344" text-anchor="middle" font-size="11">answers only from the library, cites sources</text>
+      <line class="diagram-line" x1="200" y1="328" x2="300" y2="328"/>
+      <polyline class="diagram-line" fill="none" points="292,322 300,328 292,334"/>
+      <!-- bridge to library -->
+      <line class="diagram-line" x1="375" y1="300" x2="375" y2="210"/>
+      <polyline class="diagram-line" fill="none" points="369,218 375,210 381,218"/>
+      <line class="diagram-line" x1="545" y1="300" x2="545" y2="210"/>
+      <polyline class="diagram-line" fill="none" points="539,218 545,210 551,218"/>
+    </svg>
+    <p class="text-[13.5px] text-neutral-500 dark:text-neutral-400">Everything stays on your machine: the library index, the models,
+      the request log. The web API and the agent bridge share the same server-side guards.</p>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">5. Optional: reach it from the internet</h2>
+    <div class="flex items-start gap-4">
+      <img src="robot-reader.png" alt="Reed, the reader robot" class="w-16 h-16 shrink-0 [image-rendering:pixelated]">
+      <div>
+        <p class="mt-0">Janus (an ETMW product) opens a secure tunnel from your machine to a public address in one
+          command - no router setup, no accounts to juggle.</p>
+        <ol class="pl-5 space-y-1.5">
+          <li>Install Janus on the machine running OpenKB.</li>
+          <li>Run <code class="bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded font-mono text-[13.5px]">janus open openkb:8641</code>.</li>
+          <li>Share the address it prints.</li>
+        </ol>
+        <p class="mb-0 text-neutral-500 dark:text-neutral-400">Optional. OpenKB works fully without it.</p>
+      </div>
+    </div>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">6. Troubleshooting</h2>
+    <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 text-[14px]">
+      <div class="p-3.5"><span class="font-mono text-[13px]">ollama: command not found</span> - install Ollama from ollama.com, start it, then re-run the installer.</div>
+      <div class="p-3.5"><span class="font-mono text-[13px]">model not found</span> - pull the two models: <span class="font-mono text-[13px]">ollama pull qwen3.6:35b-a3b</span> and <span class="font-mono text-[13px]">ollama pull qwen3-embedding:4b</span>.</div>
+      <div class="p-3.5">First answer takes a minute - the reader loads on first use and stays warm while Ollama keeps running.</div>
+      <div class="p-3.5">Port 8641 already in use - run with <span class="font-mono text-[13px]">OPENKB_PORT=8650 python3 app/server.py</span>.</div>
+      <div class="p-3.5">A plain page instead of the app - build the UI once: <span class="font-mono text-[13px]">cd ui && npm install && npm run build</span>.</div>
+      <div class="p-3.5">Ollama on another machine - point at it with <span class="font-mono text-[13px]">OPENKB_OLLAMA_HOST=http://host:11434</span>.</div>
+      <div class="p-3.5">Not enough disk - the models need about 25 GB free; the chart above shows what takes what.</div>
+    </div>
+
+    <div class="mt-10 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 p-4 text-[13.5px] text-neutral-600 dark:text-neutral-300">
+      The guards travel with the code: rate limits, the daily cap, the input and answer limits, and the
+      "not in the library" refusal are all server-side - nobody can turn them off from a client.
+      Full details in <a class="underline" href="https://github.com/warodri/etmw_openkb" target="_blank" rel="noopener">the GitHub repo</a>.
+    </div>
+  </main>
+</div>
