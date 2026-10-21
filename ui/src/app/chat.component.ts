@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ThemeService } from './theme.service';
@@ -20,6 +20,42 @@ export class ChatComponent implements OnInit {
   messages = signal<ChatMessage[]>([]);
   busy = signal(false);
   waiting = signal(false);
+  showJump = signal(false);
+  hasNew = signal(false);
+  private atBottom = true;
+  @ViewChild('scroller') scroller?: ElementRef<HTMLElement>;
+  @ViewChild('box') box?: ElementRef<HTMLTextAreaElement>;
+
+  constructor() {
+    // Follow new text only while the reader is at the bottom; otherwise flag it.
+    effect(() => {
+      this.messages(); this.waiting();
+      requestAnimationFrame(() => {
+        if (this.atBottom) this.scrollToBottom(false);
+        else if (this.showJump()) this.hasNew.set(true);
+      });
+    });
+  }
+
+  onScroll(): void {
+    const el = this.scroller?.nativeElement; if (!el) return;
+    this.atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    this.showJump.set(!this.atBottom);
+    if (this.atBottom) this.hasNew.set(false);
+  }
+
+  scrollToBottom(smooth: boolean): void {
+    const el = this.scroller?.nativeElement; if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+  }
+
+  jumpToBottom(): void { this.atBottom = true; this.hasNew.set(false); this.showJump.set(false); this.scrollToBottom(true); }
+
+  resizeBox(): void {
+    const el = this.box?.nativeElement; if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  }
   error = signal<string | null>(null);
   panel = signal<'how' | 'donate' | null>(null);
   showArchived = signal(false);
@@ -167,6 +203,8 @@ export class ChatComponent implements OnInit {
     this.busy.set(true);
     this.waiting.set(true);
     this.input = '';
+    setTimeout(() => this.resizeBox());
+    this.atBottom = true; this.showJump.set(false); this.hasNew.set(false);
     this.error.set(null);
     this.messages.update((m) => [...m, { role: 'user', text }]);
     this.api.ask(text, taskId).subscribe({
