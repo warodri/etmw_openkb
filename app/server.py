@@ -49,11 +49,16 @@ def db():
     c = sqlite3.connect(DB)
     c.execute("CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY, title TEXT, status TEXT DEFAULT 'active', created_at TEXT)")
     c.execute("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, task_id TEXT, role TEXT, text TEXT, sources TEXT, ts TEXT)")
+    cols = [r[1] for r in c.execute("PRAGMA table_info(tasks)")]
+    if "owner" not in cols:
+        c.execute("ALTER TABLE tasks ADD COLUMN owner TEXT")
+        c.execute("UPDATE tasks SET owner='legacy-shared' WHERE owner IS NULL")
+        c.commit()
     return c
 
-def task_rows(status):
+def task_rows(status, owner):
     c = db()
-    rows = c.execute("SELECT id, title, status, created_at FROM tasks WHERE status=? ORDER BY created_at DESC", (status,)).fetchall()
+    rows = c.execute("SELECT id, title, status, created_at FROM tasks WHERE status=? AND owner=? ORDER BY created_at DESC", (status, owner)).fetchall()
     c.close()
     return [{"id": r[0], "title": r[1], "status": r[2], "created_at": r[3]} for r in rows]
 
@@ -179,9 +184,17 @@ async function ask(){
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def _ip(self): return self.client_address[0]
+    def _visitor(self):
+        m = re.search(r"(?:^|;\s*)okv=([0-9a-f]{32})", self.headers.get("Cookie", ""))
+        if m: return m.group(1), False
+        return uuid.uuid4().hex, True
+    def _ck(self):
+        if getattr(self, "_newv", False):
+            self.send_header("Set-Cookie", "okv=%s; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax" % self._vid)
     def _json(self, code, obj):
         body = json.dumps(obj).encode()
         self.send_response(code); self.send_header("Content-Type", "application/json")
+        self._ck()
         self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
     def _file(self, path):
         ext = os.path.splitext(path)[1].lower()
@@ -191,17 +204,19 @@ class H(BaseHTTPRequestHandler):
         except OSError:
             return False
         self.send_response(200); self.send_header("Content-Type", CTYPES.get(ext, "application/octet-stream"))
+        self._ck()
         self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
         return True
 
     def do_GET(self):
+        self._vid, self._newv = self._visitor()
         path = self.path.split("?")[0]
         if path == "/api/tasks":
-            return self._json(200, {"active": task_rows("active"), "archived": task_rows("done")})
+            return self._json(200, {"active": task_rows("active", self._vid), "archived": task_rows("done", self._vid)})
         m = re.match(r"^/api/tasks/([A-Za-z0-9-]+)$", path)
         if m:
             c = db()
-            t = c.execute("SELECT id, title, status, created_at FROM tasks WHERE id=?", (m.group(1),)).fetchone()
+            t = c.execute("SELECT id, title, status, created_at FROM tasks WHERE id=? AND owner=?", (m.group(1), self._vid)).fetchone()
             msgs = c.execute("SELECT role, text, sources, ts FROM messages WHERE task_id=? ORDER BY id", (m.group(1),)).fetchall()
             c.close()
             if not t: return self._json(404, {"error": "no such task"})
@@ -223,6 +238,7 @@ class H(BaseHTTPRequestHandler):
         else:
             self._json(404, {"error": "not found"})
     def do_POST(self):
+        self._vid, self._newv = self._visitor()
         path = self.path.split("?")[0]
         if path == "/api/tasks":
             n = int(self.headers.get("Content-Length", 0))
@@ -232,17 +248,17 @@ class H(BaseHTTPRequestHandler):
                 title = "New task"
             tid = uuid.uuid4().hex[:12]
             c = db()
-            c.execute("INSERT INTO tasks (id, title, status, created_at) VALUES (?,?,?,?)",
-                      (tid, title or "New task", "active", datetime.now(timezone.utc).isoformat()))
+            c.execute("INSERT INTO tasks (id, title, status, created_at, owner) VALUES (?,?,?,?,?)",
+                      (tid, title or "New task", "active", datetime.now(timezone.utc).isoformat(), self._vid))
             c.commit(); c.close()
             return self._json(200, {"id": tid, "title": title or "New task"})
         m = re.match(r"^/api/tasks/([A-Za-z0-9-]+)/done$", path)
         if m:
             c = db()
-            t = c.execute("SELECT status FROM tasks WHERE id=?", (m.group(1),)).fetchone()
+            t = c.execute("SELECT status FROM tasks WHERE id=? AND owner=?", (m.group(1), self._vid)).fetchone()
             if not t: c.close(); return self._json(404, {"error": "no such task"})
             new = "done" if t[0] == "active" else "active"
-            c.execute("UPDATE tasks SET status=? WHERE id=?", (new, m.group(1)))
+            c.execute("UPDATE tasks SET status=? WHERE id=? AND owner=?", (new, m.group(1), self._vid))
             c.commit(); c.close()
             return self._json(200, {"id": m.group(1), "status": new})
         if path != "/ask": return self._json(404, {"error": "not found"})
@@ -262,6 +278,11 @@ class H(BaseHTTPRequestHandler):
             return self._json(400, {"error": "bad request"})
         q = q.strip()[:MAX_INPUT]
         if not q: return self._json(400, {"error": "empty question"})
+        if task_id:
+            c = db()
+            own = c.execute("SELECT 1 FROM tasks WHERE id=? AND owner=?", (task_id, self._vid)).fetchone()
+            c.close()
+            if not own: return self._json(404, {"error": "no such task"})
         logline("ask", ip, q)
         if not state.get("first_alert_sent"):
             state["first_alert_sent"] = True; save_state()
