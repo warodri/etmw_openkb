@@ -37,6 +37,17 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
    Same visual language as /host: pixel-robot style, diagrams, mobile + light/dark.
    Report with screenshots when live.
 
+4. **Coverage-map page** (Walter, 2026-10-21): a public page mapping the topics the
+   library covers (graph / visual map), so visitors see the gaps and know what to
+   donate. Sequence: AFTER the 50-doc retrieval test. No build yet - idea recorded.
+
+## Holds and intent (Walter, 2026-10-21)
+
+- **Product Hunt launch: HELD** until the DB has more depth. Do not prepare or
+  schedule launch work until Walter reopens it.
+- Walter intends to use OpenKB himself for both Chat and Work via the desktop
+  client - the desktop client is his own daily driver, not only a later user stage.
+
 ## Done
 
 - **"Host it yourself" as a full page** (2026-10-21, commit af8bfd9): /host route
