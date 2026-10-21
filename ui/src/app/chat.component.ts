@@ -23,6 +23,13 @@ export class ChatComponent implements OnInit {
   showJump = signal(false);
   hasNew = signal(false);
   private atBottom = true;
+  micState = signal<'idle' | 'recording' | 'transcribing'>('idle');
+  micError = signal<string | null>(null);
+  micSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined';
+  private rec?: MediaRecorder;
+  private recChunks: Blob[] = [];
+  private recStream?: MediaStream;
+  private recTimer?: ReturnType<typeof setTimeout>;
   @ViewChild('scroller') scroller?: ElementRef<HTMLElement>;
   @ViewChild('box') box?: ElementRef<HTMLTextAreaElement>;
 
@@ -50,6 +57,49 @@ export class ChatComponent implements OnInit {
   }
 
   jumpToBottom(): void { this.atBottom = true; this.hasNew.set(false); this.showJump.set(false); this.scrollToBottom(true); }
+
+  async toggleMic(): Promise<void> {
+    if (this.micState() === 'recording') { this.stopMic(); return; }
+    if (this.micState() !== 'idle' || this.busy()) return;
+    this.micError.set(null);
+    try {
+      this.recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      this.micError.set('Microphone is blocked. Allow it in your browser settings to dictate.');
+      return;
+    }
+    const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+    const mime = types.find((m) => MediaRecorder.isTypeSupported(m));
+    this.recChunks = [];
+    this.rec = new MediaRecorder(this.recStream, mime ? { mimeType: mime } : undefined);
+    this.rec.ondataavailable = (e) => { if (e.data.size) this.recChunks.push(e.data); };
+    this.rec.onstop = () => this.sendClip(this.rec?.mimeType || mime || 'audio/webm');
+    this.rec.start();
+    this.micState.set('recording');
+    this.recTimer = setTimeout(() => this.stopMic(), 29000);
+  }
+
+  private stopMic(): void {
+    clearTimeout(this.recTimer);
+    if (this.rec && this.rec.state !== 'inactive') this.rec.stop();
+    this.recStream?.getTracks().forEach((tr) => tr.stop());
+  }
+
+  private sendClip(mime: string): void {
+    const blob = new Blob(this.recChunks, { type: mime });
+    this.recChunks = [];
+    if (blob.size < 1500) { this.micState.set('idle'); this.micError.set('That was too short. Tap the mic and try again.'); return; }
+    this.micState.set('transcribing');
+    this.api.transcribe(blob).subscribe({
+      next: (r) => {
+        const text = (r.text || '').trim();
+        if (text) { this.input = (this.input ? this.input.trimEnd() + ' ' : '') + text; setTimeout(() => this.resizeBox()); this.box?.nativeElement.focus(); }
+        else this.micError.set('I could not hear anything. Try again.');
+        this.micState.set('idle');
+      },
+      error: (e) => { this.micState.set('idle'); this.micError.set(e?.error?.error || 'Dictation failed. Try again.'); },
+    });
+  }
 
   resizeBox(): void {
     const el = this.box?.nativeElement; if (!el) return;

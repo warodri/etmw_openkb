@@ -9,3 +9,6 @@
 :host-context(.dark) .bubble-user { background-color: #404040; color: #e5e5e5; }
 .bubble-assistant { background-color: #f5f5f5; color: #262626; }
 :host-context(.dark) .bubble-assistant { background-color: #2f2f2f; color: #e5e5e5; }
+
+.mic-rec { color: #dc2626; animation: micpulse 1.2s ease-in-out infinite; }
+@keyframes micpulse { 0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,.35); } 50% { box-shadow: 0 0 0 8px rgba(220,38,38,0); } }

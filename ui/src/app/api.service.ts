@@ -63,6 +63,12 @@ export class ApiService {
     return this.http.post<{ id: string; status: string }>(`/api/tasks/${id}/done`, {});
   }
 
+  transcribe(blob: Blob) {
+    return this.http.post<{ text: string }>('/api/transcribe', blob, {
+      headers: { 'Content-Type': blob.type || 'application/octet-stream' },
+    });
+  }
+
   ask(q: string, taskId: string): Observable<AskResponse> {
     return this.http.post<AskResponse>('/ask', { q, task_id: taskId });
   }

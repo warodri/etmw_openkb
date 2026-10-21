@@ -348,6 +348,9 @@ class H(BaseHTTPRequestHandler):
             c.execute("UPDATE tasks SET status=? WHERE id=? AND owner=?", (new, m.group(1), self._owner()))
             c.commit(); c.close()
             return self._json(200, {"id": m.group(1), "status": new})
+        if path == "/api/transcribe":
+            import transcribe
+            return transcribe.handle(self, logline)
         if path != "/ask": return self._json(404, {"error": "not found"})
         ip = self._ip()
         guard = check_guards(ip)

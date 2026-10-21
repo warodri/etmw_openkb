@@ -63,3 +63,16 @@ the MCP bridge has its own separate daily quota (identity `agent-mcp`, its own
 counter and log), so an agent loop can never eat the users' allowance. The
 "not in the KB" refusal and the source list are computed server-side - no client,
 agent or otherwise, can turn them off.
+
+## Optional: dictation (local speech-to-text)
+
+The mic button in the prompt box sends a short clip to `POST /api/transcribe`, which runs
+[whisper.cpp](https://github.com/ggml-org/whisper.cpp) on your machine. Audio is held in a temp
+folder only while it is transcribed, then deleted; neither audio nor text is logged.
+
+    brew install whisper-cpp ffmpeg
+    mkdir -p models && curl -L -o models/ggml-small.bin \
+      https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin
+
+Settings: `OPENKB_WHISPER_BIN`, `OPENKB_WHISPER_MODEL`, `OPENKB_STT_PER_MIN` (6), `OPENKB_STT_DAILY_CAP` (300).
+Without the model file, the mic button reports that dictation is not set up.
