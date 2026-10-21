@@ -19,6 +19,7 @@ export class ChatComponent implements OnInit {
   task = signal<Task | null>(null);
   messages = signal<ChatMessage[]>([]);
   busy = signal(false);
+  waiting = signal(false);
   error = signal<string | null>(null);
   panel = signal<'how' | 'donate' | null>(null);
   showArchived = signal(false);
@@ -164,6 +165,7 @@ export class ChatComponent implements OnInit {
 
   private ask(text: string, taskId: string): void {
     this.busy.set(true);
+    this.waiting.set(true);
     this.input = '';
     this.error.set(null);
     this.messages.update((m) => [...m, { role: 'user', text }]);
@@ -171,6 +173,7 @@ export class ChatComponent implements OnInit {
       next: (r) => this.typeOut(r.answer, r.sources, r.not_found),
       error: (e) => {
         this.busy.set(false);
+        this.waiting.set(false);
         this.error.set(
           e?.error?.error ||
             'The assistant could not answer. It may be busy or rate-limited - try again in a moment.'
@@ -182,6 +185,7 @@ export class ChatComponent implements OnInit {
   /** Client-side typewriter: the full answer is already here; reveal it quickly,
    *  then show sources and the refusal box at the end. The server answer is unchanged. */
   private typeOut(full: string, sources: string[], notFound: boolean): void {
+    this.waiting.set(false);
     const finish = () => {
       this.messages.update((m) => [...m.slice(0, -1), { role: 'assistant', text: full, sources, not_found: notFound }]);
       this.busy.set(false);
