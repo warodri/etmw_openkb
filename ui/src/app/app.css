@@ -1,0 +1,9 @@
+/* Component styles are Tailwind utility classes in app.html; the few
+   two-theme conditional states live here because Angular class bindings
+   cannot express Tailwind dark: variants cleanly. */
+.task-selected { background-color: #e5e5e5; }
+.dark .task-selected { background-color: #262626; }
+.bubble-user { background-color: #e5e5e5; }
+.dark .bubble-user { background-color: #404040; }
+.bubble-assistant { background-color: #f5f5f5; }
+.dark .bubble-assistant { background-color: #2f2f2f; }

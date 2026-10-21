@@ -1,4 +1,4 @@
-# Amelia OpenKB - concept in one page
+# OpenKB - concept in one page
 
 **Date:** 20 October 2026
 **Owner:** Walter Rodriguez / Enter To My World (ETMW)
@@ -6,7 +6,7 @@
 
 ## The idea
 
-A small reader and a shared library. Today's AI loads an entire giant model into memory to answer anything, so only a few companies can afford to run one. The bet here is the opposite: a small, cheap core model that knows language and reasoning, and reads only the material relevant to the conversation at hand. The knowledge lives outside the model, in a shared, community-held knowledge base: Amelia OpenKB. The reader is cheap enough to run anywhere; the library belongs to everyone.
+A small reader and a shared library. Today's AI loads an entire giant model into memory to answer anything, so only a few companies can afford to run one. The bet here is the opposite: a small, cheap core model that knows language and reasoning, and reads only the material relevant to the conversation at hand. The knowledge lives outside the model, in a shared, community-held knowledge base: OpenKB. The reader is cheap enough to run anywhere; the library belongs to everyone.
 
 ## The problem
 
@@ -37,7 +37,7 @@ Entries are sourced, not "true". Every claim in the library carries its source, 
 
 ## How it ties to Amelia
 
-OpenKB is not a new product. It is Amelia's open knowledge layer: the library the reader reads. One project, one story, not a fourth front next to FabulAI and Minerva.
+Amelia will use OpenKB as its open knowledge layer: the library the reader reads. OpenKB is a separate, independent project, not a new product, and not a fourth front next to FabulAI and Minerva.
 
 ## First milestone
 
@@ -49,4 +49,4 @@ A public repo with the licence and consent documents, ingestion working for the 
 - Junk and poisoned donations are a matter of when, not if. Review and rollback must exist before scale.
 - The first 100 contributors are harder than the code.
 - Small readers still often fail to use what they retrieve. How small the core can get is an open research question; we measure, we do not assume.
-- Time. This stays Amelia's layer, built in evenings, or it does not survive.
+- Time. This stays a lean, evenings-built project, or it does not survive.

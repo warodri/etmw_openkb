@@ -1,6 +1,6 @@
-# Donor consent - Amelia OpenKB (English)
+# Donor consent - OpenKB (English)
 
-Thank you for donating knowledge to Amelia OpenKB. Donating is a deliberate act. Please read and confirm each point before sending your content.
+Thank you for donating knowledge to OpenKB. Donating is a deliberate act. Please read and confirm each point before sending your content.
 
 By donating, you confirm that:
 
@@ -8,7 +8,7 @@ By donating, you confirm that:
 2. **Licence.** Your donation is published under **CC BY-SA 4.0** (https://creativecommons.org/licenses/by-sa/4.0/), unless you state another open licence in writing. Anyone may share and adapt it, with attribution, under the same licence.
 3. **AI retrieval use.** You explicitly consent to your content being stored, chunked and embedded for AI retrieval, and read by AI models to answer questions, with attribution to you.
 4. **Public donor log.** Your name (or chosen public handle), the title of the donation, the date and the licence are recorded in the public donor log (`consent/donor-log.md`).
-5. **Takedown.** You can ask for your content to be removed at any time. It will leave the current index and all future releases, and the takedown will be recorded in the log.
+5. **Takedown.** You can ask for your content to be removed at any time. It will leave the library, the current index and all future releases, and the takedown will be recorded in the log. Honest limit: the library is public - old copies may survive in git history and in clones other people already made, and those cannot be recalled. If you tell us a donation is sensitive (for example a book), we keep the file itself out of the public repo so removal stays fully in our control.
 
 Donation record (fill in and keep a copy):
 

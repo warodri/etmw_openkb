@@ -1,0 +1,192 @@
+<div class="flex h-screen bg-white text-neutral-800 dark:bg-[#212121] dark:text-neutral-200 font-sans">
+  <aside class="w-64 min-w-64 bg-neutral-100 dark:bg-[#171717] flex flex-col p-3 border-r border-neutral-200 dark:border-neutral-800">
+    <div class="text-lg font-semibold px-2 pt-1 pb-3">OpenKB</div>
+    <button
+      class="w-full py-2.5 mb-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-sm cursor-pointer"
+      (click)="newTask()">+ New task</button>
+
+    <div class="text-xs uppercase text-neutral-500 dark:text-neutral-400 px-2 py-1">Tasks</div>
+    <div class="flex flex-col gap-0.5 overflow-y-auto">
+      @for (t of active(); track t.id) {
+        <button
+          class="text-left px-2 py-2 rounded-md text-sm truncate cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-800"
+          [class.task-selected]="task()?.id === t.id"
+          (click)="openTask(t)">{{ t.title }}</button>
+      } @empty {
+        <div class="text-neutral-400 dark:text-neutral-500 text-[13px] px-2 py-2">No open tasks</div>
+      }
+    </div>
+
+    <button
+      class="text-left text-xs uppercase text-neutral-500 dark:text-neutral-400 px-2 pt-3 pb-1 cursor-pointer bg-transparent border-0"
+      (click)="showArchived.set(!showArchived())">
+      Done ({{ archived().length }}) {{ showArchived() ? '▾' : '▸' }}
+    </button>
+    @if (showArchived()) {
+      <div class="flex flex-col gap-0.5 overflow-y-auto">
+        @for (t of archived(); track t.id) {
+          <button
+            class="text-left px-2 py-2 rounded-md text-sm truncate cursor-pointer text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800"
+            [class.task-selected]="task()?.id === t.id"
+            (click)="openTask(t)">{{ t.title }}</button>
+        }
+      </div>
+    }
+
+    <div class="mt-auto flex flex-col gap-0.5 border-t border-neutral-200 dark:border-neutral-800 pt-2">
+      <button class="text-left px-2 py-2 rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer bg-transparent border-0" (click)="panel.set('how')">How this works</button>
+      <button class="text-left px-2 py-2 rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer bg-transparent border-0" (click)="panel.set('donate')">Donate knowledge</button>
+      <button class="text-left px-2 py-2 rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer bg-transparent border-0" (click)="panel.set('janus')">Host it yourself</button>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col min-w-0">
+    <header class="flex justify-between items-center px-5 py-3 border-b border-neutral-200 dark:border-neutral-800">
+      <span class="text-[15px] font-semibold truncate">{{ task()?.title || 'OpenKB demo' }}</span>
+      <div class="flex items-center gap-2">
+        @if (task()) {
+          <button
+            class="px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer bg-transparent"
+            (click)="toggleDone()">
+            {{ task()!.status === 'done' ? 'Reopen task' : 'Mark done' }}
+          </button>
+        }
+        <button
+          class="px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] cursor-pointer bg-transparent"
+          [attr.aria-label]="dark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          (click)="toggleTheme()">
+          {{ dark() ? '☀ Light' : '☾ Dark' }}
+        </button>
+      </div>
+    </header>
+
+    <section class="flex-1 overflow-y-auto p-5">
+      @if (!task()) {
+        <div class="max-w-xl mx-auto mt-[15vh] text-center text-neutral-500 dark:text-neutral-400">
+          <h1 class="text-2xl font-semibold text-neutral-800 dark:text-neutral-200">OpenKB is the first model you can run locally and have the same result as any frontier models you may know. It answers from a growing open library the community populates constantly</h1>
+        </div>
+      } @else if (messages().length === 0) {
+        <div class="max-w-xl mx-auto mt-[15vh] text-center text-neutral-500 dark:text-neutral-400">
+          <h1 class="text-2xl font-semibold text-neutral-800 dark:text-neutral-200">{{ task()!.title }}</h1>
+          <p>Ask the first question for this task.</p>
+        </div>
+      }
+
+      @for (m of messages(); track $index) {
+        <div class="flex mb-4" [class.justify-end]="m.role === 'user'">
+          <div class="max-w-3xl px-4 py-3 rounded-2xl leading-relaxed text-[15px] whitespace-pre-wrap"
+               [class.bubble-user]="m.role === 'user'"
+               [class.bubble-assistant]="m.role === 'assistant'">
+            <div>{{ m.text }}</div>
+            @if (m.sources && m.sources.length) {
+              <div class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">Sources: {{ m.sources!.join(', ') }}</div>
+            }
+            @if (m.not_found) {
+              <div class="mt-3 px-3.5 py-3 rounded-xl border bg-amber-50 border-amber-200 dark:bg-[#26261f] dark:border-[#4a4433]">
+                <h3 class="m-0 mb-2 text-sm text-amber-800 dark:text-[#e0d6b0]">Add this knowledge</h3>
+                <ol class="m-0 pl-5 text-[13.5px] text-amber-900 dark:text-[#cfc8ae]">
+                  <li>Upload the document - PDF, Word, scans, even photos of pages.</li>
+                  <li>Answer three questions: it is yours to share, you are OK with CC BY-SA, and it can be edited.</li>
+                  <li>Preview the converted text before anything is stored.</li>
+                  <li>A maintainer reviews it.</li>
+                  <li>It joins the library under CC BY-SA, credited to you.</li>
+                </ol>
+                <p class="mt-2.5 mb-0 text-[13px] italic text-neutral-500 dark:text-neutral-400">Donations open soon.</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      @if (busy()) {
+        <div class="flex mb-4">
+          <div class="px-4 py-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 italic">Thinking…</div>
+        </div>
+      }
+    </section>
+
+    @if (error()) {
+      <div class="mx-5 px-3.5 py-2.5 rounded-lg text-sm bg-red-50 border border-red-200 text-red-800 dark:bg-[#3a2424] dark:border-[#5a3030] dark:text-[#e0b0b0]">{{ error() }}</div>
+    }
+
+    <footer class="flex gap-2.5 px-5 pt-3 pb-4">
+      <textarea
+        class="flex-1 resize-none px-3.5 py-3 rounded-xl border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-[15px] outline-none focus:border-neutral-500 dark:focus:border-neutral-400 font-sans"
+        [(ngModel)]="input"
+        (keydown)="onKeydown($event)"
+        maxlength="500"
+        rows="2"
+        placeholder="Ask a question - Enter to send, Shift+Enter for a new line"></textarea>
+      <button
+        class="px-6 rounded-xl border-0 bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900 text-[15px] font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-default"
+        (click)="send()" [disabled]="busy() || !input.trim()">Send</button>
+    </footer>
+  </main>
+</div>
+
+@if (panel()) {
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-10" (click)="panel.set(null)">
+    <div class="relative w-[90%] max-w-xl max-h-[80vh] overflow-y-auto rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-8 py-6 leading-relaxed text-[14.5px]" (click)="$event.stopPropagation()">
+      <button class="absolute top-2.5 right-3.5 bg-transparent border-0 text-2xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer" (click)="panel.set(null)">×</button>
+
+      @if (panel() === 'how') {
+        <h2 class="mt-0">How this works</h2>
+
+        <div class="flex items-start gap-4 mb-5">
+          <img src="robot-library.png" alt="Libby, the library robot"
+               class="w-20 h-20 shrink-0 [image-rendering:pixelated]">
+          <div>
+            <h3 class="m-0 mb-1.5 text-lg font-semibold">The library</h3>
+            <p class="m-0">Documents donated by their owners under an open licence (CC BY-SA).
+               Every donation is confirmed by the person who made it, reviewed by a maintainer,
+               and can be taken down on request.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-4 mb-5">
+          <img src="robot-reader.png" alt="Reed, the reader robot"
+               class="w-20 h-20 shrink-0 [image-rendering:pixelated]">
+          <div>
+            <h3 class="m-0 mb-1.5 text-lg font-semibold">The reader</h3>
+            <p class="m-0">A small model running on this computer. It answers only from the
+               library, always names its sources, and says so plainly when the library does
+               not have the answer. Sources, not truth.</p>
+          </div>
+        </div>
+
+        <h3 class="text-base">Trust rules</h3>
+        <ul>
+          <li>Every document is donated by someone who confirmed it is theirs to share.</li>
+          <li>A maintainer reviews each donation before it joins the library.</li>
+          <li>Anything can be taken down on request - no questions asked.</li>
+        </ul>
+      }
+
+      @if (panel() === 'donate') {
+        <h2 class="mt-0">Donate knowledge</h2>
+        <p>The library grows by donation. Five steps:</p>
+        <ol>
+          <li>Upload anything - PDF, Word, scans, even photos of pages.</li>
+          <li>Answer three questions: it is yours to share, you are OK with CC BY-SA, and it can be edited.</li>
+          <li>Preview the converted text before anything is stored.</li>
+          <li>A maintainer reviews it.</li>
+          <li>It joins the library under CC BY-SA, credited to you.</li>
+        </ol>
+        <p class="italic text-neutral-500 dark:text-neutral-400">Donations open soon - the consent review is being finalised.</p>
+      }
+
+      @if (panel() === 'janus') {
+        <h2 class="mt-0">Host it yourself</h2>
+        <p>OpenKB works fully on your own computer - nothing here requires a hosted service.</p>
+        <p>If you want to reach it from the internet, Janus (an ETMW product) opens a secure tunnel
+           from your machine to a public address in one command - no router setup, no accounts to juggle.</p>
+        <ol>
+          <li>Install Janus on the machine running OpenKB.</li>
+          <li>Run <code class="bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded">janus open openkb:8641</code>.</li>
+          <li>Share the address it prints.</li>
+        </ol>
+        <p>Optional. OpenKB works fully without it.</p>
+      }
+    </div>
+  </div>
+}

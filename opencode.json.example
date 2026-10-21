@@ -1,0 +1,45 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "qwen3.6:35b-a3b": {
+          "name": "Qwen3.6 35B A3B (local)"
+        },
+        "qwen3-coder:30b": {
+          "name": "Qwen3 Coder 30B (local)"
+        }
+      }
+    }
+  },
+  "mcp": {
+    "openkb": {
+      "type": "local",
+      "command": [
+        "python3",
+        "app/mcp_server.py"
+      ],
+      "enabled": true,
+      "environment": {
+        "OPENKB_OLLAMA_HOST": "http://127.0.0.1:11434"
+      }
+    }
+  },
+  "agent": {
+    "openkb": {
+      "description": "Ask the OpenKB library: grounded answers with sources, read-only.",
+      "mode": "primary",
+      "model": "ollama/qwen3.6:35b-a3b",
+      "prompt": "You are the OpenKB agent. Answer factual questions ONLY by calling the openkb MCP tools (kb_answer or kb_search). Never answer factual questions from your own knowledge. When you use a tool result, repeat its returned sources verbatim in your reply. If the tool reports not_found, say plainly that the library does not have the answer and do not fill the gap yourself. You have no write access of any kind.",
+      "permission": {
+        "edit": "deny",
+        "shell": "deny"
+      }
+    }
+  }
+}

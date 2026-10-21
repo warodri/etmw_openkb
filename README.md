@@ -1,29 +1,50 @@
-# Amelia OpenKB
+# OpenKB
 
-A small reader and a shared library. Amelia OpenKB is a community-held knowledge base built for AI retrieval: people donate expert, structured content under an open licence, and a small, cheap reader model answers questions by reading only what is relevant - so the knowledge lives outside the model and belongs to everyone.
+## The rules of AI say: knowledge answers come from a datacenter, rented by the query, from a model you'll never see, trained on text nobody was asked about. We're here to change those rules.
 
-OpenKB is the open knowledge layer of [Amelia](https://entertomyworld.com/apps/amelia/#/), built by Enter To My World (ETMW). Spanish first, then many languages.
+OpenKB answers questions from a library the community owns - donated documents,
+open licences, named sources - read by a model that runs on your own machine.
+No cloud. No API bill. No black box between you and the answer, and no answer
+without a source you can check.
 
-- Concept: [docs/CONCEPT.md](docs/CONCEPT.md)
-- Code licence: [Apache 2.0](LICENSE)
-- Content licence: [CC BY-SA 4.0](CONTENT-LICENSE.md) with explicit AI-retrieval consent
-- Donate content: [consent/](consent/) - consent forms and the public donor log
+**Try the live demo:** https://openkb--warodri.entertomyworld.com/
+**Install your own:** `./install.sh` (see [docs/INSTALL.md](docs/INSTALL.md))
 
-## Status
+## What we're going after
 
-Early scaffold. The repo is private while the licence and consent flow are reviewed. First milestone: ingestion for 50 donated documents (Spanish and English) and a small open model answering questions from only those documents, demoed locally.
+We're set on running side by side with frontier models - a small local reader
+giving answers you can't tell apart from the big labs', served from your own
+machine, from a library the community owns. We work on it daily.
 
-## Stack (initial)
+Our thesis: for most factual questions, you don't need a datacenter. You need a
+reader that knows its limits, sitting on top of a library built by people who
+said yes. If we're right, knowledge stops being a subscription and starts being
+a commons.
 
-- Reader model: Qwen3.6-35B-A3B (Apache 2.0), runs locally on a Mac Mini M4 Pro 48GB
-- Embeddings: Qwen3-Embedding-4B + Qwen3-Reranker (Apache 2.0, 100+ languages)
-- Vector store: LanceDB or Qdrant, local
-- Language: Python
+## How it works
 
-## Layout
+- **The library** - documents donated under CC BY-SA, converted to Markdown,
+  chunked, embedded locally. Every answer names its sources.
+- **The reader** - a local Qwen MoE model via Ollama. Answers only from the
+  library; when the library doesn't know, it says so. That refusal is
+  server-side and can't be prompted away.
+- **The app** - a task-organised chat UI (Angular), served by a small stdlib
+  Python server with rate limits, daily caps, and a request log.
+- **Agent mode** - opencode drives the same library through a read-only MCP
+  bridge with its own quota, so agents can never eat the users' allowance.
+- **Trust rules** - consent before donation, maintainer review before publish,
+  takedown on request. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-- `docs/` - concept and design notes
-- `consent/` - donor consent templates (EN/ES) and the public donor log
-- `src/` - ingestion, embedding, retrieval and serving (skeleton)
-- `tests/` - evaluation questions for the first retrieval test
-- `data/` - local data, never committed
+## Contribute
+
+We want this to be the easiest AI project you've ever contributed to:
+stdlib Python, one Angular app, no framework soup.
+
+- New here? Pick a [good first issue](docs/GOOD-FIRST-ISSUES.md).
+- Got expertise? Donate a document (once donations open - the consent review
+  comes first).
+- Run it, break it, and tell us where it broke.
+
+## Licence
+
+Code: Apache 2.0. Library content: CC BY-SA 4.0, donated by its owners.

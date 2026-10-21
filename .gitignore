@@ -20,3 +20,14 @@ qdrant_storage/
 .DS_Store
 .idea/
 .vscode/
+
+# UI build artifacts and local agent config
+ui/node_modules/
+ui/dist/
+ui/.angular/
+opencode.json
+
+# Intake local state - never commit book content or venvs
+intake/venv/
+intake/out/
+intake/fixtures/

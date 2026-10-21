@@ -1,6 +1,6 @@
 # Content licence - donated knowledge
 
-All donated content in Amelia OpenKB is published under **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)**, unless a donation explicitly states another open licence.
+All donated content in OpenKB is published under **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)**, unless a donation explicitly states another open licence.
 
 Legal code: https://creativecommons.org/licenses/by-sa/4.0/legalcode
 Human-readable summary: https://creativecommons.org/licenses/by-sa/4.0/
