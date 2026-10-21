@@ -31,7 +31,7 @@ export class ChatComponent implements OnInit {
   authEmail = '';
   authAns = '';
   authCode = '';
-  authQ = '';
+  authQ = signal('');
   private authCid = '';
   input = '';
 
@@ -46,7 +46,7 @@ export class ChatComponent implements OnInit {
     this.authOpen.set(true);
     this.sidebarOpen.set(false);
     this.api.authChallenge().subscribe({
-      next: (r) => { this.authCid = r.id; this.authQ = r.q; },
+      next: (r) => { this.authCid = r.id; this.authQ.set(r.q); },
       error: () => this.authError.set('Could not start sign-in. Try again.'),
     });
   }
@@ -61,7 +61,7 @@ export class ChatComponent implements OnInit {
       error: (e) => {
         this.authBusy.set(false);
         this.authError.set(e?.error?.error || 'Could not send the code. Try again.');
-        this.api.authChallenge().subscribe({ next: (r) => { this.authCid = r.id; this.authQ = r.q; }, error: () => {} });
+        this.api.authChallenge().subscribe({ next: (r) => { this.authCid = r.id; this.authQ.set(r.q); }, error: () => {} });
       },
     });
   }
