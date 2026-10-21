@@ -45,8 +45,9 @@
     }
 
     <div class="mt-auto flex flex-col gap-0.5 border-t border-neutral-200 dark:border-neutral-800 pt-2">
-      <button class="text-left px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer bg-transparent border-0" (click)="openPanel('how')">How this works</button>
-      <button class="text-left px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer bg-transparent border-0" (click)="openPanel('donate')">Donate knowledge</button>
+      <a routerLink="/how" class="px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)">How this works</a>
+      <a routerLink="/donate" class="px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)">Donate knowledge</a>
+      <a routerLink="/agent" class="px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)">Agent mode</a>
       <a routerLink="/host" class="px-2 py-2 min-h-[44px] flex items-center rounded-md text-[13px] text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-neutral-800 dark:hover:text-neutral-200 no-underline" (click)="sidebarOpen.set(false)">Host it yourself</a>
     </div>
   </aside>

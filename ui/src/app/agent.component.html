@@ -1,0 +1,38 @@
+<div class="min-h-screen bg-white text-neutral-800 dark:bg-[#212121] dark:text-neutral-200 font-sans">
+  <header class="flex items-center gap-2 px-3 md:px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 bg-white dark:bg-[#212121] z-10">
+    <a routerLink="/" class="w-11 h-11 -ml-2 shrink-0 flex items-center justify-center rounded-lg text-xl no-underline text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Back to the app">←</a>
+    <span class="flex-1 text-[15px] font-semibold truncate">Agent mode</span>
+    <button class="px-3 py-1.5 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] cursor-pointer bg-transparent" [attr.aria-label]="theme.dark() ? 'Switch to light mode' : 'Switch to dark mode'" (click)="theme.toggle()">{{ theme.dark() ? '☀ Light' : '☾ Dark' }}</button>
+  </header>
+  <main class="max-w-2xl mx-auto px-4 md:px-6 pb-16 leading-relaxed text-[15px]">
+    <div class="flex items-start gap-4 mt-8 mb-8">
+      <img src="robot-reader.png" alt="Reed, the reader robot" class="w-20 h-20 md:w-24 md:h-24 shrink-0 [image-rendering:pixelated]">
+      <div>
+        <h1 class="m-0 mb-2 text-2xl md:text-3xl font-semibold text-neutral-800 dark:text-neutral-100">Agent mode</h1>
+        <p class="m-0 text-neutral-500 dark:text-neutral-400">Use OpenKB from opencode, the coding agent, with the local model. No desktop app needed.</p>
+      </div>
+    </div>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">What it is</h2>
+    <p class="mt-0">opencode talks to OpenKB through a small read-only bridge (an MCP server). Ask opencode a factual question and it calls the library, then repeats the sources it got back. It can't write to the library, edit files or run shell commands in this mode.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">Its own allowance</h2>
+    <p class="mt-0">The bridge has its own daily quota, separate from the web app's. Agents can never use up what the people at the keyboard get. Default: 100 tool calls per UTC day, set with <code class="bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded font-mono text-[13.5px]">OPENKB_AGENT_DAILY_CAP</code>. When it's spent, the bridge says so and waits for the next day.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">Start it</h2>
+    <ol class="list-decimal pl-5 space-y-1.5">
+      <li>Follow <a routerLink="/host" class="underline">Host it yourself</a>. The installer writes <span class="font-mono text-[13px]">opencode.json</span> for you.</li>
+      <li>Install <a class="underline" href="https://opencode.ai" target="_blank" rel="noopener">opencode</a>.</li>
+      <li>In the OpenKB folder, run <code class="bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 rounded font-mono text-[13.5px]">opencode</code>.</li>
+      <li>Pick the <b>openkb</b> agent and ask a question.</li>
+    </ol>
+
+    <div class="mt-5 rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 text-[14px]">
+      <div class="p-3.5"><b>Answers only from the library.</b> The agent is told never to answer facts from its own memory.</div>
+      <div class="p-3.5"><b>"Not found" means not found.</b> It says the library doesn't have it and doesn't fill the gap.</div>
+      <div class="p-3.5"><b>Read-only.</b> Edits and shell are denied for this agent.</div>
+    </div>
+
+    <p class="mt-6 text-[13.5px] text-neutral-500 dark:text-neutral-400">Full setup details are in <a class="underline" href="https://github.com/warodri/etmw_openkb" target="_blank" rel="noopener">the GitHub repo</a>. A desktop app comes later.</p>
+  </main>
+</div>

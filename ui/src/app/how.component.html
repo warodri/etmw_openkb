@@ -1,0 +1,58 @@
+<div class="min-h-screen bg-white text-neutral-800 dark:bg-[#212121] dark:text-neutral-200 font-sans">
+  <header class="flex items-center gap-2 px-3 md:px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 bg-white dark:bg-[#212121] z-10">
+    <a routerLink="/" class="w-11 h-11 -ml-2 shrink-0 flex items-center justify-center rounded-lg text-xl no-underline text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Back to the app">←</a>
+    <span class="flex-1 text-[15px] font-semibold truncate">How this works</span>
+    <button class="px-3 py-1.5 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] cursor-pointer bg-transparent" [attr.aria-label]="theme.dark() ? 'Switch to light mode' : 'Switch to dark mode'" (click)="theme.toggle()">{{ theme.dark() ? '☀ Light' : '☾ Dark' }}</button>
+  </header>
+  <main class="max-w-2xl mx-auto px-4 md:px-6 pb-16 leading-relaxed text-[15px]">
+    <div class="flex items-start gap-4 mt-8 mb-8">
+      <img src="robot-reader.png" alt="Reed, the reader robot" class="w-20 h-20 md:w-24 md:h-24 shrink-0 [image-rendering:pixelated]">
+      <div>
+        <h1 class="m-0 mb-2 text-2xl md:text-3xl font-semibold text-neutral-800 dark:text-neutral-100">Small reader. Shared library. A source on every answer.</h1>
+        <p class="m-0 text-neutral-500 dark:text-neutral-400">Most AI loads a giant model to answer anything. OpenKB splits the job: the knowledge lives in a library people donated, and a small model on your own machine reads only the pages that matter.</p>
+      </div>
+    </div>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">From question to answer</h2>
+    <svg viewBox="0 0 640 120" class="w-full pixel-diagram" role="img" aria-label="Ask, search the library, read, answer with sources">
+      <rect class="diagram-box" x="4" y="30" width="130" height="56"/><text class="diagram-text" x="69" y="54" text-anchor="middle" font-size="14">1. Ask</text><text class="diagram-sub" x="69" y="72" text-anchor="middle" font-size="11">your question</text>
+      <line class="diagram-line" x1="134" y1="58" x2="166" y2="58"/><polyline class="diagram-line" fill="none" points="158,52 166,58 158,64"/>
+      <rect class="diagram-box" x="166" y="30" width="140" height="56"/><text class="diagram-text" x="236" y="54" text-anchor="middle" font-size="14">2. Search</text><text class="diagram-sub" x="236" y="72" text-anchor="middle" font-size="11">the donated library</text>
+      <line class="diagram-line" x1="306" y1="58" x2="338" y2="58"/><polyline class="diagram-line" fill="none" points="330,52 338,58 330,64"/>
+      <rect class="diagram-box-accent" x="338" y="30" width="140" height="56"/><text class="diagram-text" x="408" y="54" text-anchor="middle" font-size="14">3. Read</text><text class="diagram-sub" x="408" y="72" text-anchor="middle" font-size="11">local small model</text>
+      <line class="diagram-line" x1="478" y1="58" x2="510" y2="58"/><polyline class="diagram-line" fill="none" points="502,52 510,58 502,64"/>
+      <rect class="diagram-box" x="510" y="30" width="126" height="56"/><text class="diagram-text" x="573" y="54" text-anchor="middle" font-size="14">4. Answer</text><text class="diagram-sub" x="573" y="72" text-anchor="middle" font-size="11">with sources</text>
+    </svg>
+    <ol class="list-decimal pl-5 space-y-2 mt-4">
+      <li><b>You ask.</b> Your questions stay in your tasks. They never go into the library.</li>
+      <li><b>The library is searched.</b> Donated documents are converted to Markdown, split into chunks and indexed. OpenKB pulls the few passages that fit your question.</li>
+      <li><b>The reader answers.</b> A small open model reads only those passages and writes the answer. It names the document each fact came from.</li>
+      <li><b>No source, no answer.</b> If the library does not have it, the reply is "not in the KB". That refusal is enforced on the server and can't be prompted away.</li>
+    </ol>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">Why not just a big model, or Wikipedia?</h2>
+    <p class="mt-0">A big model memorises the world and you can't check where a fact came from. OpenKB's model reads. The library is open, versioned and owned by the people who donated to it.</p>
+    <p>Wikipedia is a fine library, and it could be one of the sources. OpenKB adds what Wikipedia doesn't carry: manuals, local knowledge, field guides and how-tos that people choose to donate, in many languages, Spanish first.</p>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">Why you can trust it</h2>
+    <div class="grid gap-3 md:grid-cols-2 text-[14px]">
+      <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"><b>Consent first.</b> Every donor confirms the work is theirs to share and accepts the open licence.</div>
+      <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"><b>Reviewed before it's live.</b> A maintainer reads each donation before it joins the library.</div>
+      <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"><b>History and takedown.</b> Everything is versioned. Donors can ask for removal and it really goes.</div>
+      <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"><b>Disagreement is shown.</b> Contested claims keep both sides and their sources instead of being deleted.</div>
+    </div>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">Where it's at</h2>
+    <p class="mt-0">This is OpenKB v0.1 (Beta). In our first test on a 50-document library, the reader got 19 of 20 answerable questions right with the right source, and correctly said "not in the KB" on all 5 trick questions. That shows the loop works. It is not yet a big library, and we're not claiming it matches the large labs.</p>
+
+    <h2 class="text-xl font-semibold mt-10 mb-3">Licences</h2>
+    <p class="mt-0">Code: Apache 2.0. Library content: CC BY-SA 4.0, donated by its owners.</p>
+
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a routerLink="/" class="px-4 py-2.5 min-h-[44px] flex items-center rounded-lg bg-neutral-800 text-white dark:bg-neutral-200 dark:text-neutral-900 no-underline text-[14px]">Try it</a>
+      <a routerLink="/host" class="px-4 py-2.5 min-h-[44px] flex items-center rounded-lg border border-neutral-300 dark:border-neutral-600 no-underline text-neutral-800 dark:text-neutral-200 text-[14px]">Host it yourself</a>
+      <a routerLink="/donate" class="px-4 py-2.5 min-h-[44px] flex items-center rounded-lg border border-neutral-300 dark:border-neutral-600 no-underline text-neutral-800 dark:text-neutral-200 text-[14px]">Donate knowledge</a>
+      <a routerLink="/agent" class="px-4 py-2.5 min-h-[44px] flex items-center rounded-lg border border-neutral-300 dark:border-neutral-600 no-underline text-neutral-800 dark:text-neutral-200 text-[14px]">Agent mode</a>
+    </div>
+  </main>
+</div>
