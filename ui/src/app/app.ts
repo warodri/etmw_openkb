@@ -19,11 +19,17 @@ export class App implements OnInit {
   error = signal<string | null>(null);
   panel = signal<'how' | 'donate' | 'janus' | null>(null);
   showArchived = signal(false);
+  sidebarOpen = signal(false);
   dark = signal(false);
   input = '';
 
   ngOnInit(): void {
     this.refresh();
+  }
+
+  openPanel(p: 'how' | 'donate' | 'janus'): void {
+    this.panel.set(p);
+    this.sidebarOpen.set(false);
   }
 
   toggleTheme(): void {
@@ -43,6 +49,7 @@ export class App implements OnInit {
   }
 
   openTask(t: Task): void {
+    this.sidebarOpen.set(false);
     this.task.set(t);
     this.error.set(null);
     this.api.getTask(t.id).subscribe({
