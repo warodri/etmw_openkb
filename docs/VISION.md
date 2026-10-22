@@ -19,7 +19,7 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:
 - DECIDED: Walter's novels enter only later, as a submitted public URL (for example a public Google Drive PDF/Doc), through the same pipeline.
 - DECIDED: crawl agents detect the licence per document.
 - DECIDED (22 Oct, 13:22): crawlers use the licence detected on the page. If none is found, the crawler user's mandatory default licence applies (logged with the account) and the entry is tagged "user-declared". Anyone can request removal.
-- DECIDED (22 Oct, 13:22): user-declared entries show reference only, no quotes, unless the page states its own licence. Build comes after the index-only work.
+- DECIDED and BUILT (22 Oct, 13:40): user-declared entries show reference only, no quotes, unless the page states its own licence. The page licence wins; with none, the crawler user's default is used, recorded in the audit log with the account, shown as "(user-declared)" next to the source and the reader is told to paraphrase, not quote. A page showing NC or ND is refused even with a default. Crawl-agent invitation and the default-licence setting on the account are not built yet.
 
 ## 4. Answers and quotes
 - DECIDED (22 Oct, 13:04): default answer is reference only. Quote on request, with the licence shown. No quote length limit, because indexed content is open-licensed by definition.
@@ -51,7 +51,7 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:
 - Retrieval test: 19/20 answers and 5/5 refusals, same as before. Q10 stays as is.
 
 ## 9. OPEN / UNDECIDED
-1. Pointer-mode research tests 1 and 2: approved 22 Oct 13:05, research only, nothing public. Not yet run.
+1. Pointer-mode research tests 1 and 2: DONE 22 Oct 13:45, see docs/POINTER-MODE-RESULTS.md (catalogue F1 0.96; quick read 16/20 correct, all misses were refusals, 13-15 s). Tests 3 to 6 not approved.
 2. Pointer-mode build: not approved.
 3. A lawyer reads docs/CONTENT-LICENSE.md (share-alike interplay) before the paid tier or public launch.
 4. Reference-only build and the purge of stored text (section 8).
