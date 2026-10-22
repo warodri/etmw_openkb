@@ -22,7 +22,18 @@ def transform(raw, recipe):
         if not (a and b): return None
         return _norm(raw[a.end():b.start()])
     if recipe in ("ia", "plain"): return _norm(raw)
+    if recipe == "html": return html_to_text(raw)
     return None
+
+_DROP = re.compile(r"(?is)<(head|title|script|style|nav|header|footer|aside|form|noscript|svg|iframe|template|select|button)\b.*?</\1\s*>|<!--.*?-->")
+_BLOCK = re.compile(r"(?i)</?(p|div|br|li|ul|ol|h[1-6]|tr|table|section|article|blockquote|pre|hr|dd|dt|dl|figure|figcaption|main)\b[^>]*>")
+
+def html_to_text(raw):
+    """Pure and deterministic: the same page gives the same text and offsets at index time and at question time."""
+    import html as _h
+    t = _DROP.sub(" ", raw or ""); t = _BLOCK.sub("\n", t); t = re.sub(r"<[^>]+>", " ", t); t = _h.unescape(t)
+    t = re.sub(r"[ \t\f\v\u00a0]+", " ", t); t = re.sub(r" ?\n ?", "\n", t); t = re.sub(r"\n{3,}", "\n\n", t)
+    return t.strip()
 
 MIN_READABLE = 800   # a page with less readable text than this is treated as empty (JavaScript-only shell, login wall)
 _TAG = re.compile(r"\[\s*(source|sources|system|assistant|user|context)\b[^\]\n]{0,120}\]", re.I)
@@ -47,6 +58,11 @@ def _fetch_raw(url):
 
 def _fetch_raw2(url):
     import collector as C
+    C.ALLOW.add("archive.org")
+    h = urllib.parse.urlparse(url).hostname or ""
+    if not (h in C.ALLOW or h.endswith(".archive.org")):   # a page a user's crawl agent submitted: same safety rules as at intake
+        import intake
+        with _lock: return intake.fetch_url(url, delay=QUERY_DELAY)[0]
     C.ALLOW.add("archive.org")   # hosts our collectors take from; text_url values come only from them
     with _lock:   # one fetch at a time, polite spacing between requests
         return C.get(url, limit=C.MAX_DOC_BYTES * 3, delay=QUERY_DELAY)
