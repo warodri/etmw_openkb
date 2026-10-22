@@ -17,6 +17,8 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 
 - **Licence decision (Walter, 2026-10-22):** CC BY-SA only, for all content. No donor choice, no NC variant. Open: whether user crawl agents accept only PD/CC0 sources (proposal) - awaiting Walter.
 
+- **Publishing model (Walter, 2026-10-22):** risk-split. Auto-publish from allow-listed PD/CC0 sources (provenance record, one-click takedown, weekly sampled audit). Human review for user submissions, non-listed sites, unclear licence checks. Required: public "Report this" on answers/sources, /report page, removal workflow and log. See docs/COLLECTION-PLAN.md. No build yet.
+
 ## Done
 
 - **Pages 1-3 shipped** (2026-10-21): /agent (agent mode guide), /how (How this works), /donate (donations CLOSED, "opens soon", LLM/agent path documented only). Sidebar links updated. Awaiting Walter's review; the machine-gathered licensing decision stays his.
