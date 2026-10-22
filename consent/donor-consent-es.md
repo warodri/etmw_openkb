@@ -1,21 +1,21 @@
-# Consentimiento del donante - OpenKB (Espanol)
+# Consentimiento del colaborador - OpenKB (Espanol)
 
-Gracias por donar conocimiento a OpenKB. Donar es un acto deliberado. Lee y confirma cada punto antes de enviar tu contenido.
+Actualizado el 22 oct 2026. Gracias por aportar conocimiento a OpenKB. Envias una referencia (una URL o ubicacion) al contenido, no el contenido en si. Lee y confirma cada punto.
 
-Al donar, confirmas que:
+Al enviar, confirmas que:
 
-1. **Tienes derecho a donar este contenido.** Es obra tuya, o tienes permiso para compartirlo bajo una licencia abierta.
-2. **Licencia.** Tu donacion se publica bajo **CC BY-SA 4.0** (https://creativecommons.org/licenses/by-sa/4.0/deed.es), salvo que indiques otra licencia abierta por escrito. Cualquiera puede compartirla y adaptarla, con atribucion, bajo la misma licencia.
-3. **Uso para recuperacion por IA.** Das consentimiento explicito para que tu contenido se almacene, se divida en fragmentos y se vectorice para recuperacion por IA, y para que modelos de IA lo lean al responder preguntas, con atribucion a ti.
-4. **Registro publico de donantes.** Tu nombre (o alias publico), el titulo de la donacion, la fecha y la licencia quedan registrados en el registro publico (`consent/donor-log.md`).
-5. **Retirada.** Puedes pedir la retirada de tu contenido en cualquier momento. Saldra de la biblioteca, del indice actual y de todas las versiones futuras, y la retirada quedara registrada. Limite honesto: la biblioteca es publica - pueden quedar copias antiguas en el historial de git y en clones que otras personas ya hayan hecho, y esas no se pueden recuperar. Si nos dices que una donacion es sensible (por ejemplo un libro), mantenemos el archivo fuera del repositorio publico para que la retirada siga totalmente bajo nuestro control.
+1. **Tienes derecho a enviarlo.** Es obra tuya, o ya esta publicado con una licencia abierta que permite reutilizarlo.
+2. **Licencia.** Declaras una licencia abierta: Dominio publico, CC0, CC BY, CC BY-SA, MIT, Apache-2.0 o BSD. No se aceptan contenidos no comerciales (NC), sin derivadas (ND) ni con todos los derechos reservados. La licencia se guarda con la entrada y se muestra junto a cada respuesta que la usa. Si la propia pagina indica otra licencia, prevalece la de la pagina.
+3. **Uso para recuperacion con IA.** Consientes que la biblioteca indexe tu contenido (posiciones de fragmentos, huellas y embeddings) y que modelos de IA lean partes cortas para responder preguntas, mostrando la fuente y la licencia. Por defecto las respuestas remiten a la fuente; quien pregunta puede pedir una cita.
+4. **Registro publico.** Tu nombre o alias publico, el titulo, la fecha y la licencia constan en el registro publico.
+5. **Retirada.** Puedes pedir en cualquier momento que se retire la entrada. Sale del indice y de las versiones futuras, y la retirada queda registrada. Limite honesto: la biblioteca guarda referencias y vectores, no copias, pero lo que ya se mostro en una respuesta o copiaron otras personas no se puede recuperar.
 
-Registro de donacion (completa y guarda una copia):
+Registro (guarda una copia):
 
-- Nombre del donante o alias publico:
-- Contacto (email):
-- Titulo y descripcion del contenido donado:
+- Nombre o alias publico:
+- Contacto (correo):
+- Titulo, URL y descripcion:
 - Idioma(s):
-- Licencia (por defecto CC BY-SA 4.0):
+- Licencia (una de las siete anteriores):
 - Fecha:
-- Firma o confirmacion escrita explicita (un email es suficiente):
+- Confirmacion escrita (basta un correo):

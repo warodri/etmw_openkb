@@ -223,7 +223,7 @@ small{color:#666}</style></head><body>
 <b>Add this knowledge</b>
 <p><small>OpenKB grows by donation. Know this well - a manual, local knowledge, your own book (say, your copy of "Away")? Here is how it will work:</small></p>
 <ol style="font-size:.9em;color:#444;margin:0 0 0 1.2em;padding:0">
-<li>You keep your copyright. Donations are published under the open CC BY-SA 4.0 licence - anyone may reuse and share what you donate, with credit to you. Good to know before you give.</li>
+<li>You keep your copyright. Donations are published under the open licence you pick (public domain, CC0, CC BY, CC BY-SA, MIT, Apache-2.0 or BSD) - anyone may reuse and share what you donate, as that licence allows, with credit to you. Good to know before you give.</li>
 <li>You sign a short, plain-language consent for AI retrieval (English or Spanish). No consent, no content.</li>
 <li>Your donation is listed in the public donor log.</li>
 <li>A topic maintainer reviews it before it goes in, like open-source code.</li>

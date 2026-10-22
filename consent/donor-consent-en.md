@@ -1,21 +1,21 @@
-# Donor consent - OpenKB (English)
+# Contributor consent - OpenKB (English)
 
-Thank you for donating knowledge to OpenKB. Donating is a deliberate act. Please read and confirm each point before sending your content.
+Updated 22 Oct 2026. Thank you for adding knowledge to OpenKB. You submit a reference (a URL or location) to content, not the content itself. Please read and confirm each point.
 
-By donating, you confirm that:
+By submitting, you confirm that:
 
-1. **You have the right to donate this content.** It is your own work, or you have permission to share it under an open licence.
-2. **Licence.** Your donation is published under **CC BY-SA 4.0** (https://creativecommons.org/licenses/by-sa/4.0/), unless you state another open licence in writing. Anyone may share and adapt it, with attribution, under the same licence.
-3. **AI retrieval use.** You explicitly consent to your content being stored, chunked and embedded for AI retrieval, and read by AI models to answer questions, with attribution to you.
-4. **Public donor log.** Your name (or chosen public handle), the title of the donation, the date and the licence are recorded in the public donor log (`consent/donor-log.md`).
-5. **Takedown.** You can ask for your content to be removed at any time. It will leave the library, the current index and all future releases, and the takedown will be recorded in the log. Honest limit: the library is public - old copies may survive in git history and in clones other people already made, and those cannot be recalled. If you tell us a donation is sensitive (for example a book), we keep the file itself out of the public repo so removal stays fully in our control.
+1. **You have the right to submit this.** It is your own work, or it is already published under an open licence that allows reuse.
+2. **Licence.** You declare one open licence for it: Public domain, CC0, CC BY, CC BY-SA, MIT, Apache-2.0 or BSD. Content under non-commercial (NC), no-derivatives (ND) or all-rights-reserved terms is not accepted. The licence is stored with the entry and shown next to every answer that uses it. If the page itself shows a different licence, the page wins.
+3. **AI retrieval use.** You consent to the library indexing your content (chunk positions, hashes and embeddings) and to AI models reading short parts of it to answer questions, with the source and licence shown. By default answers point to the source; a user may ask for a quote.
+4. **Public record.** Your name or public handle, the title, the date and the licence are recorded in the public log.
+5. **Takedown.** You can ask for the entry to be removed at any time. It leaves the index and all future releases, and the takedown is recorded. Honest limit: the library holds references and vectors, not copies, but anything already shown in an answer or copied by others cannot be recalled.
 
-Donation record (fill in and keep a copy):
+Record (keep a copy):
 
-- Donor name or public handle:
+- Name or public handle:
 - Contact (email):
-- Title and description of the donated content:
+- Title, URL and description:
 - Language(s):
-- Licence (default CC BY-SA 4.0):
+- Licence (one of the seven above):
 - Date:
-- Signature or explicit written confirmation (email is enough):
+- Written confirmation (email is enough):

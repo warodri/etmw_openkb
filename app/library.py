@@ -15,7 +15,7 @@ MIN_CHARS, MAX_CHARS = 300, 2_000_000
 PER_USER_DAILY_DOCS = 20
 
 # Accepted licences (normalised key -> display). NC and ND are never accepted.
-ACCEPTED = {"pd": "Public domain", "cc0": "CC0", "cc-by": "CC BY", "cc-by-sa": "CC BY-SA"}
+ACCEPTED = {"pd": "Public domain", "cc0": "CC0", "cc-by": "CC BY", "cc-by-sa": "CC BY-SA", "mit": "MIT", "apache": "Apache-2.0", "bsd": "BSD"}
 REPORT_REASONS = ("copyright", "personal-data", "harmful", "quality", "other")
 
 INJECTION = [r"ignore (all |any )?(previous|prior|above) (instructions|prompts)", r"disregard (the )?(system|previous) (prompt|instructions)",
@@ -58,6 +58,9 @@ def norm_licence(s):
     if "cc0" in t or "public domain dedication" in t: return "cc0"
     m = re.match(r"^(cc )?by( sa)?( \d( \d)?)?( international| intl| unported)?$", t)
     if m: return "cc-by-sa" if m.group(2) else "cc-by"
+    if re.match(r"^mit( license| licence)?$", t): return "mit"
+    if re.match(r"^apache( license| licence)?( v? ?2 0| version 2 0| 2)?$", t): return "apache"
+    if re.match(r"^((new |simplified |revised )?bsd( [23] clause)?|[23] clause bsd)( license| licence)?$", t): return "bsd"
     return None
 
 def check_text(text):
@@ -104,10 +107,10 @@ def _submit(c, text, title, origin, licence, source_url="", credit="", contribut
     """Run checks; publish if all pass. Returns {ok, doc_id, reasons}. No human review step."""
     reasons = []
     key = norm_licence(licence)
-    if key is None: reasons.append("licence missing, unclear, or not accepted (accepted: public domain, CC0, CC BY, CC BY-SA; NC/ND excluded)")
+    if key is None: reasons.append("licence missing, unclear, or not accepted (accepted: public domain, CC0, CC BY, CC BY-SA, MIT, Apache-2.0, BSD; NC/ND excluded)")
     if origin not in ("manual", "collector", "user-crawler"): reasons.append("unknown origin")
     if origin in ("manual", "user-crawler"):
-        need = ("own_or_licensed", "ok_with_cc_by_sa", "may_be_edited")
+        need = ("own_or_licensed", "ok_with_cc_by_sa", "may_be_edited")  # key name kept for compatibility: means "OK with the open licence picked"
         if not declarations or not all(declarations.get(k) for k in need): reasons.append("the three declarations were not all accepted")
     if origin in ("collector", "user-crawler") and not re.match(r"^https?://", source_url or ""): reasons.append("source URL required")
     if not (title or "").strip(): reasons.append("title required")
@@ -154,6 +157,14 @@ def live_doc_loaders(db_path=None):
 def live_titles(db_path=None):
     """[(doc_id, title)] for live documents."""
     c = connect(db_path); rows = [(r["id"], r["title"]) for r in c.execute("SELECT id, title FROM documents WHERE status='live'")]; c.close(); return rows
+
+def licences_for(doc_ids, db_path=None):
+    """Licence name per document id (same order). Unknown ids give an empty string."""
+    c = connect(db_path); out = []
+    for d in doc_ids:
+        r = c.execute("SELECT licence FROM documents WHERE id=?", (d,)).fetchone()
+        out.append(r["licence"] if r and r["licence"] else "")
+    c.close(); return out
 
 def get_document(doc_id, db_path=None):
     c = connect(db_path); r = c.execute("SELECT * FROM documents WHERE id=?", (doc_id,)).fetchone(); c.close()

@@ -24,7 +24,7 @@ export class DonateComponent implements OnInit {
   d1 = signal(false); d2 = signal(false); d3 = signal(false);
   reasons = signal<string[]>([]);
   note = signal('');
-  readonly licences = ['CC BY-SA 4.0', 'CC BY 4.0', 'CC0', 'Public domain'];
+  readonly licences = ['CC BY-SA 4.0', 'CC BY 4.0', 'CC0', 'Public domain', 'MIT', 'Apache-2.0', 'BSD'];
   private timer: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {

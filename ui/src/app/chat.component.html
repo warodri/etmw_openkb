@@ -122,7 +122,7 @@
                [class.bubble-assistant]="m.role === 'assistant'">
             <div>{{ m.text }}</div>
             @if (m.sources && m.sources.length && !m.not_found) {
-              <div class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">Sources: {{ m.sources!.join(', ') }}</div>
+              <div class="mt-2 text-xs text-neutral-500 dark:text-neutral-400">Sources: {{ sourceLine(m) }}</div>
               @if (sourceChoices(m).length) {
                 <button class="mt-1 p-0 text-xs underline text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 cursor-pointer bg-transparent border-0" (click)="openReport(m)">Report this</button>
               }
@@ -132,10 +132,10 @@
                 <h3 class="m-0 mb-2 text-sm text-amber-800 dark:text-[#e0d6b0]">Add this knowledge</h3>
                 <ol class="m-0 pl-5 text-[13.5px] text-amber-900 dark:text-[#cfc8ae]">
                   <li>Upload the document - PDF, Word, scans, even photos of pages.</li>
-                  <li>Answer three questions: it is yours to share, you are OK with CC BY-SA, and it can be edited.</li>
+                  <li>Answer three questions: it is yours to share, you are OK with the open licence you pick, and it can be edited.</li>
                   <li>Preview the converted text before anything is stored.</li>
                   <li>Automatic checks run: licence, duplicates, spam.</li>
-                  <li>It joins the library under CC BY-SA, credited to you.</li>
+                  <li>It joins the library under the licence you picked, credited to you.</li>
                 </ol>
                 <p class="mt-2.5 mb-0 text-[13px] italic text-neutral-500 dark:text-neutral-400">Donations open soon.</p>
               </div>
@@ -254,10 +254,10 @@
         <p>The library grows by donation. Five steps:</p>
         <ol>
           <li>Upload anything - PDF, Word, scans, even photos of pages.</li>
-          <li>Answer three questions: it is yours to share, you are OK with CC BY-SA, and it can be edited.</li>
+          <li>Answer three questions: it is yours to share, you are OK with the open licence you pick, and it can be edited.</li>
           <li>Preview the converted text before anything is stored.</li>
           <li>Automatic checks run: licence, duplicates, spam.</li>
-          <li>It joins the library under CC BY-SA, credited to you.</li>
+          <li>It joins the library under the licence you picked, credited to you.</li>
         </ol>
         <p class="italic text-neutral-500 dark:text-neutral-400">Donations open soon - the consent review is being finalised.</p>
       }

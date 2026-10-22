@@ -139,6 +139,10 @@ export class ChatComponent implements OnInit {
     return out;
   }
 
+  sourceLine(m: { sources?: string[]; licences?: string[] }): string {
+    return (m.sources || []).map((s, i) => { const l = (m.licences || [])[i]; return l ? s + ' (' + l + ')' : s; }).join(', ');
+  }
+
   openReport(m: { sources?: string[]; source_ids?: string[] }): void {
     const ch = this.sourceChoices(m);
     this.reportChoices.set(ch); this.reportDoc.set(ch[0]?.id || '');
@@ -347,7 +351,7 @@ export class ChatComponent implements OnInit {
     this.error.set(null);
     this.messages.update((m) => [...m, { role: 'user', text }]);
     this.api.ask(text, taskId).subscribe({
-      next: (r) => this.typeOut(r.answer, r.sources, r.not_found, r.source_ids),
+      next: (r) => this.typeOut(r.answer, r.sources, r.not_found, r.source_ids, r.licences),
       error: (e) => {
         this.busy.set(false);
         this.waiting.set(false);
@@ -361,10 +365,10 @@ export class ChatComponent implements OnInit {
 
   /** Client-side typewriter: the full answer is already here; reveal it quickly,
    *  then show sources and the refusal box at the end. The server answer is unchanged. */
-  private typeOut(full: string, sources: string[], notFound: boolean, sourceIds: string[] = []): void {
+  private typeOut(full: string, sources: string[], notFound: boolean, sourceIds: string[] = [], licences: string[] = []): void {
     this.waiting.set(false);
     const finish = () => {
-      this.messages.update((m) => [...m.slice(0, -1), { role: 'assistant', text: full, sources, source_ids: sourceIds, not_found: notFound }]);
+      this.messages.update((m) => [...m.slice(0, -1), { role: 'assistant', text: full, sources, source_ids: sourceIds, licences, not_found: notFound }]);
       this.busy.set(false);
     };
     const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;

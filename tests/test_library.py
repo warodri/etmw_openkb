@@ -20,6 +20,9 @@ ok(not sub(text=text+" more4", declarations={"own_or_licensed": True})["ok"], "m
 ok(sub(text=text+" collector text one", origin="collector", licence="CC0", source_url="https://example.org/a", declarations=None)["ok"], "collector w/ url publishes")
 ok(not sub(text=text+" collector text two", origin="collector", licence="CC0", source_url="", declarations=None)["ok"], "collector w/o url rejected")
 ok(len(L.live_chunks(db)) == 2, "2 live docs")
+for _i, _l in enumerate(["MIT", "Apache License 2.0", "BSD 3-Clause", "Apache-2.0"]):
+    ok(sub(text=text+" licence variant %d" % _i + " zeta"*(_i+1), licence=_l)["ok"], "licence accepted: " + _l)
+ok(L.norm_licence("GPL-3.0") is None, "GPL not on the accepted list")
 doc = r["doc_id"]
 page = "<html>© 2020 Jane Author. All rights reserved. " + text + "</html>"
 good = dict(claimant="Jane Author", holder_contact="jane@example.org", evidence_url="https://example.org/original", statement=True, db_path=db)
@@ -86,5 +89,5 @@ ok(y["outcome"] == "queued" and L.get_document(d4, db)["status"] == "hidden", "t
 ok(L.report("nope", "copyright", db_path=db) is None and L.report(d4, "bogus", db_path=db) is None, "bad reports refused")
 ok(L._safe_url("http://127.0.0.1/x") is False and L._safe_url("http://localhost/") is False and L._safe_url("file:///etc/passwd") is False, "evidence fetch refuses private/local addresses")
 for i in range(25): L.submit(text=text+f" distinct body number {i} " + "alpha beta gamma delta "*i*3 + chr(97+i%26)*i, title=f"d{i}", origin="manual", licence="CC0", contributor="spammer", declarations=decl, embed=fake, db_path=db)
-ok(L.stats(db)["documents"].get("live", 0) <= 2 + L.PER_USER_DAILY_DOCS, "per-user daily cap holds")
+ok(L.stats(db)["documents"].get("live", 0) <= 6 + L.PER_USER_DAILY_DOCS, "per-user daily cap holds")
 print(L.stats(db))

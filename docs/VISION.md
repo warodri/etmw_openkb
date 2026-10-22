@@ -1,6 +1,6 @@
 # OpenKB vision
 
-Single page Walter and the build team check first. Last updated 22 Oct 2026. Each line is marked DECIDED (with date) or OPEN.
+Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:20. Each line is marked DECIDED (with date) or OPEN.
 
 ## 1. Vision (DECIDED)
 - A small model that runs locally, plus one giant shared index. The model fetches only the parts it needs. No whole books are loaded.
@@ -12,10 +12,11 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026. Eac
 - DECIDED: NC, ND and all-rights-reserved content stays out.
 - DECIDED: no private shelf. Walter's novels stay out. No separate dev-docs collection.
 - DECIDED: $3/month tier buys access to the model and the library.
-- OPEN: per-document licence tagging, the upload licence picker and licences shown in answers are not built yet.
+- BUILT (22 Oct): all seven licences are accepted and stored per document; the licence is shown next to each source in answers; the contribution form has a licence picker. NC/ND are refused automatically.
 
 ## 3. Contributors
-- DECIDED: two routes, uploads and user crawl agents. Content is auto-published after automated checks. No human validation of content.
+- DECIDED (22 Oct, 13:18): contributors submit a reference (URL or location) to content, not the text itself. Uploading text is not part of the plan. User crawl agents submit the same way. The server fetches the URL, checks it, and indexes it as offsets + hash + URL. Auto-published after automated checks. No human validation of content.
+- DECIDED: Walter's novels enter only later, as a submitted public URL (for example a public Google Drive PDF/Doc), through the same pipeline.
 - DECIDED: crawl agents detect the licence per document.
 - OPEN: what happens when no licence is found. Current default is "not published". Proposal: a pointer-only entry (title, URL, short note, no text stored). Needs Walter's decision.
 
@@ -38,6 +39,11 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026. Eac
 - DECIDED: donations stay closed ("Donations open soon") until Walter decides.
 
 ## 8. Index and storage
+- DECIDED (22 Oct, 13:14): no hosted full text. The library keeps references, offsets, hashes and vectors; the text is fetched from the source at question time. Direction decided; design and build pending (see docs/ARCHITECTURE.md). Source gone or changed = that chunk is dropped and the answer says so.
+- OPEN: 24 h capped cache of fetched source pages (so hosts are not hit on every question). Awaiting Walter's yes.
+- OPEN: the 50 synthetic test documents (no source URL) - keep as a private test corpus or remove.
+- DECIDED and DONE (22 Oct, 13:19): converted copy of Walter's novel in data/intake deleted.
+- Current state: the Mac Mini still stores chunk text for 32 library documents until the reference-only build is tested (19/20 retest) and Walter approves the purge. A private backup will be made before any purge.
 - DECIDED (22 Oct, 13:02): disk-based vector index (sqlite-vec, float32, cosine). No all-vectors-in-RAM.
 - Built and tested on 22 Oct: see docs/BACKLOG.md and the commit log. 821 chunks use 13.8 MB on disk; the server's memory dropped from about 90 MB to about 39 MB; a 20,000-chunk test (about 800 docs) takes 64 ms per search and 211 MB on disk.
 - Retrieval test: 19/20 answers and 5/5 refusals, same as before. Q10 stays as is.
@@ -46,7 +52,7 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026. Eac
 1. No-licence pages as pointer-only entries (see docs/POINTER-MODE-PLAN.md). Research tests 1 and 2 approved 22 Oct 13:05, research only, nothing public.
 2. Pointer-mode build: not approved.
 3. A lawyer reads docs/CONTENT-LICENSE.md (share-alike interplay) before the paid tier or public launch.
-4. Tagging, upload picker, licences in answers (section 2).
+4. Reference-only build and the purge of stored text (section 8).
 
 ## 10. Prior art
 - II-Commons, HIVE, Context7 and Common Corpus are inputs and neighbours. The architecture (small reader plus retrieval over a shared index) is not new.

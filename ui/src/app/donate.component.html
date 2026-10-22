@@ -45,7 +45,7 @@
             </label>
             <div class="space-y-2 mb-3">
               <label class="flex items-start gap-3"><input type="checkbox" class="mt-1" [checked]="d1()" (change)="d1.set($any($event.target).checked)"><span>This is mine to share, or its licence allows it.</span></label>
-              <label class="flex items-start gap-3"><input type="checkbox" class="mt-1" [checked]="d2()" (change)="d2.set($any($event.target).checked)"><span>I am OK with it being published under CC BY-SA 4.0.</span></label>
+              <label class="flex items-start gap-3"><input type="checkbox" class="mt-1" [checked]="d2()" (change)="d2.set($any($event.target).checked)"><span>I am OK with it being published under the open licence I picked above.</span></label>
               <label class="flex items-start gap-3"><input type="checkbox" class="mt-1" [checked]="d3()" (change)="d3.set($any($event.target).checked)"><span>I understand it can be edited, with the history kept.</span></label>
             </div>
             <div class="flex gap-2">
@@ -78,7 +78,7 @@
     <p class="mt-0">You must answer yes to all three before anything is stored.</p>
     <div class="space-y-2 text-[14px]">
       <label class="flex items-start gap-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-3.5"><input type="checkbox" disabled class="mt-1"><span>This is mine to share.</span></label>
-      <label class="flex items-start gap-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-3.5"><input type="checkbox" disabled class="mt-1"><span>I'm OK with it being published under CC BY-SA 4.0.</span></label>
+      <label class="flex items-start gap-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-3.5"><input type="checkbox" disabled class="mt-1"><span>I'm OK with it being published under the open licence I pick.</span></label>
       <label class="flex items-start gap-3 rounded-xl border border-neutral-200 dark:border-neutral-700 p-3.5"><input type="checkbox" disabled class="mt-1"><span>I understand it can be edited, with the history kept.</span></label>
     </div>
 

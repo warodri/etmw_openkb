@@ -6,7 +6,7 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 
 4. **Coverage-map page** (Walter, 2026-10-21): a public page mapping the topics the
    library covers (graph / visual map), so visitors see the gaps and know what to
-   donate. Sequence: AFTER the 50-doc retrieval test. No build yet - idea recorded.
+   donate. Sequence: the 50-doc retrieval test is done (19/20, 5/5). No build yet - idea recorded.
 
 ## Holds and intent (Walter, 2026-10-21)
 
@@ -15,13 +15,13 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 - Walter intends to use OpenKB himself for both Chat and Work via the desktop
   client - the desktop client is his own daily driver, not only a later user stage.
 
-- **Licence decision (Walter, 2026-10-22, revised 12:35 - several open licences tagged per document, see COLLECTION-PLAN "Licences per document"; the next text is the older rule): CC BY-SA only, for all content. No donor choice, no NC variant. Open: whether user crawl agents accept only PD/CC0 sources (proposal) - awaiting Walter.
+- **Licence decision (Walter, 2026-10-22, revised 12:35):** several open licences tagged per document: Public domain, CC0, CC BY, CC BY-SA, MIT, Apache-2.0, BSD; NC/ND/all-rights-reserved out. Shown next to answers (built 22 Oct). The earlier CC BY-SA-only rule is gone. See docs/VISION.md.
 
 - **Publishing model (Walter, 2026-10-22):** risk-split. Auto-publish from allow-listed PD/CC0 sources (provenance record, one-click takedown, weekly sampled audit). SUPERSEDED same day: no human review before publishing at all; user submissions and collectors auto-publish after automated checks. Required: public "Report this" on answers/sources, /report page, removal workflow and log. See docs/COLLECTION-PLAN.md. No build yet.
 
-- **User crawl agents (Walter, 2026-10-22):** they feed the one shared library (grow together, not duplicate work). Accepted licences: PD, CC0, CC BY, CC BY-SA, credit kept in provenance; NC and ND excluded. Invite-only; auto-publish after automated checks (no human review, Walter 2026-10-22, 08:58); residual licence risk accepted, mitigated by report-and-remove and audit log. No build yet.
+- **User crawl agents (Walter, 2026-10-22):** they feed the one shared library (grow together, not duplicate work). Accepted licences: the seven open licences above, detected per document, credit kept in provenance; NC and ND excluded. Invite-only; auto-publish after automated checks (no human review, Walter 2026-10-22, 08:58); residual licence risk accepted, mitigated by report-and-remove and audit log. No build yet.
 
-- **Report triage (Walter, 2026-10-22, 10:04):** reports are triaged automatically (rate limits, dedupe, reputation, evidence check for copyright, quoted-text check for personal data); obvious = auto-remove, bogus = dismiss + log, ambiguous = maintainer queue. No hide-on-any-report. See docs/COLLECTION-PLAN.md section 4.
+- **Report triage (Walter, 2026-10-22, 10:04):** reports are triaged automatically (rate limits, dedupe, reputation, evidence check for copyright, quoted-text check for personal data); obvious = auto-remove, bogus = dismiss + log, ambiguous = a person acts (24 h target). No hide-on-any-report. See docs/COLLECTION-PLAN.md section 4.
 
 ## Done
 
@@ -33,3 +33,7 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 - **Welcome-page crawler counter (Walter, 2026-10-22, after the first collector works):** a small honest live counter under the hero (active collectors/keys, last active, docs added; honest zero state). Config flag so clones show their own count or hide it. Hero text unchanged.
 - **MCP / API docs index (Walter, 2026-10-22, PLAN ONLY):** see docs/DEV-DOCS-PLAN.md. Nothing built until approved.
 - **Pointer-index mode (Walter, 2026-10-22, PLAN ONLY):** see docs/POINTER-MODE-PLAN.md.
+
+- **Disk-based vector index (Walter, 2026-10-22, 13:02):** built and live (sqlite-vec). See docs/VISION.md section 8.
+- **References only, no hosted text (Walter, 2026-10-22, 13:14 and 13:18):** direction decided; design and build pending his answer on the 24 h page cache. Contributors submit references, not text. See docs/ARCHITECTURE.md.
+- **Quote policy (Walter, 2026-10-22, 13:04):** answers reference the source by default, quote on request, licence shown, no quote length limit.
