@@ -28,7 +28,7 @@ The library grows together, not by everyone duplicating the same work: people an
 
 ## How it works
 
-- **The library** - documents donated under CC BY-SA, converted to Markdown,
+- **The library** - documents under open licences (public domain, CC0, CC BY, CC BY-SA, MIT, Apache-2.0, BSD), each tagged with its own licence, converted to Markdown,
   chunked, embedded locally. Every answer names its sources.
 - **The reader** - a local Qwen MoE model via Ollama. Answers only from the
   library; when the library doesn't know, it says so. That refusal is
@@ -52,6 +52,6 @@ stdlib Python, one Angular app, no framework soup.
 
 ## Licence
 
-Code: Apache 2.0. Library content: CC BY-SA 4.0, donated by its owners.
+Code: Apache 2.0. Library content: open licences only, each document keeps and shows its own licence (see CONTENT-LICENSE.md).
 
 Welcome-page crawler counter: the hosted site shows how many crawler agents added documents in the last 48 hours. It is off by default in a clone. Set `OPENKB_SHOW_COUNTER=1` to show your own library's numbers (`/api/public-stats`).

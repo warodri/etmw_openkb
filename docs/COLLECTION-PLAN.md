@@ -4,8 +4,8 @@ Status: PLAN ONLY, for Walter's review. Nothing here is built. Written 2026-10-2
 Builds on docs/LIBRARIAN.md (spec draft) and the existing intake pipeline.
 
 ## Fixed rules (Walter's decisions)
-- Decision 2026-10-22: single licence, CC BY-SA, for everything in the library. No donor choice of licence, no non-commercial (NC) variant.
-- One library, one licence: CC BY-SA. No separate showcase or "producer" area. The producer idea stays as story material for posts and videos.
+- Decision 2026-10-22 (revised 12:35): the shared library takes several OPEN licences, tagged per document: PD, CC0, CC BY, CC BY-SA, MIT, Apache-2.0, BSD. Replaces the earlier single-licence (CC BY-SA only) rule. NC, ND, all-rights-reserved and unlicensed material is excluded, which keeps the paid tier clean ($3 a month = access to the model and library under these licences). Answers show the licence of every source. Manual upload: the user picks the licence from the list.
+- One shared library. No separate collection, no separate showcase or "producer" area, and NO private shelf: everything uploaded is shared, so Walter's novels stay out. The producer idea stays as story material for posts and videos.
 - Our own collectors take public domain or CC0 only. User crawl agents may also submit CC BY and CC BY-SA sources (section 2). Nothing else is collected by machine.
 - Collectors are opencode agents on the local model. No paid model calls. Max 2 running at once.
 - The public donate flow stays CLOSED ("Donations open soon") until Walter says otherwise.
@@ -111,3 +111,18 @@ app/collector_ia.py, run daily at 05:00 (launchd job com.openkb.collector-ia, `c
 
 ### Run lock and weekly sample
 collector_run.py takes a file lock (data/collector.lock); a second run that starts while one is going logs "skipped" and exits, so runs never overlap. `python3 app/weekly_sample.py` writes data/weekly_sample.md: 20 random live documents from the week (title, source, id) for the maintainer. It is a report, not a gate.
+
+## Licences per document (Walter, 2026-10-22, 12:35). Policy only: nothing below is built.
+- Library licences: PD, CC0, CC BY, CC BY-SA, MIT, Apache-2.0, BSD. Every document stores its SPDX-style licence id, the copyright line, and the notice text where the licence needs one (Apache NOTICE). Every answer lists each source with its licence.
+- Manual upload: the user picks the licence from the list, and the declaration says it is theirs to publish under that licence. For repos and developer docs the LICENSE file at a pinned commit must agree (see docs/DEV-DOCS-PLAN.md).
+- User crawl agents: the licence is detected per document (licence field, repo LICENSE file, page statement). Default when none is found: NOT published, logged with the reason. (Awaiting Walter's confirmation; main told him it must be not-published.) No "assume CC BY-SA".
+- Our own collectors stay PD/CC0 only for now.
+- Paid tier: $3/month for access to the model and library under these licences. Because NC, ND and all-rights-reserved are excluded, charging for access does not conflict with any licence in the library. Each licence's attribution duty still holds.
+- No private shelf and no separate dev-docs collection. Option (b) from the earlier plan is dropped.
+
+### Share-alike interplay: flag for a lawyer
+- CC BY-SA requires adaptations to be shared under BY-SA. MIT, Apache and BSD allow reuse in a BY-SA work, but BY-SA material cannot be relicensed as MIT. Mixing them in one library, with each document keeping its own licence, is a "collection" of separate works, which is the usual reading. The open question is a generated answer that merges a BY-SA source with permissive ones: is it an adaptation of the BY-SA source, and under what licence is the answer shared?
+- Attribution: CC BY, BY-SA, MIT, Apache and BSD all need credit or notice kept. The sources list in every answer is the planned mechanism.
+- Apache-2.0 needs the NOTICE text and a statement of changes; our chunking and conversion count as changes.
+- Charging $3/month is allowed by every accepted licence (no NC). Whether the "service" charge affects the share-alike duty is for the lawyer.
+- Recommendation: a lawyer reads CONTENT-LICENSE.md and this section before the paid tier starts, and before more than the current public-domain and CC0 material is added under BY-SA or permissive licences.

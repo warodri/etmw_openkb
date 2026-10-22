@@ -15,7 +15,7 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 - Walter intends to use OpenKB himself for both Chat and Work via the desktop
   client - the desktop client is his own daily driver, not only a later user stage.
 
-- **Licence decision (Walter, 2026-10-22):** CC BY-SA only, for all content. No donor choice, no NC variant. Open: whether user crawl agents accept only PD/CC0 sources (proposal) - awaiting Walter.
+- **Licence decision (Walter, 2026-10-22, revised 12:35 - several open licences tagged per document, see COLLECTION-PLAN "Licences per document"; the next text is the older rule): CC BY-SA only, for all content. No donor choice, no NC variant. Open: whether user crawl agents accept only PD/CC0 sources (proposal) - awaiting Walter.
 
 - **Publishing model (Walter, 2026-10-22):** risk-split. Auto-publish from allow-listed PD/CC0 sources (provenance record, one-click takedown, weekly sampled audit). SUPERSEDED same day: no human review before publishing at all; user submissions and collectors auto-publish after automated checks. Required: public "Report this" on answers/sources, /report page, removal workflow and log. See docs/COLLECTION-PLAN.md. No build yet.
 

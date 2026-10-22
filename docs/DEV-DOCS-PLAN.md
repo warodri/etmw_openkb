@@ -1,6 +1,6 @@
 # Plan: index MCP servers and API docs ("how exactly do I use X?")
 
-Status: PLAN ONLY, for Walter's approval. Nothing here is built. Written 2026-10-22.
+Status: PLAN ONLY, for Walter's approval. Nothing here is built. Written 2026-10-22. Updated 12:35 with Walter's decisions: developer docs go in the SAME shared library (no separate collection), the library takes several open licences tagged per document, and there is no private shelf. Where the text below disagrees with this note, this note wins.
 
 Goal: a small local model answers "how exactly do I call tool Y of MCP server X" correctly, from the real docs, with the version and fetch date shown. Promo hook: "try it with these MCPs we indexed".
 
@@ -13,7 +13,7 @@ Rule, all machine-checkable:
 - Attribution kept: every document stores repo URL, licence SPDX id, copyright line, commit SHA, fetch date, and the NOTICE text when the licence needs it (Apache-2.0). Answers show the source with licence.
 - The upstream project can mix licences. Example, checked today: the MCP project's own LICENSE says it is moving from MIT to Apache-2.0, some contributions stay MIT, and documentation contributions (not specs) are CC BY 4.0. So the check is per file or per directory, not per repo: take the licence statement that covers that file, else skip.
 
-Where it lives: a separate collection ("developer docs"), not mixed into the CC BY-SA general library. Reasons: (1) MIT/Apache text cannot be relicensed as CC BY-SA by us, it must keep its own licence and notice; (2) the "everything in this library is CC BY-SA, reuse it freely" promise stays true for the general library; (3) answers can say "from developer docs, Apache-2.0". The general library keeps one licence, as Walter decided. CC BY and CC0 developer docs could also sit in the main library, but one rule per collection is simpler. Retrieval searches both; the answer says which collection each source came from.
+Where it lives (Walter, 12:35): in the same shared library, not a separate collection. Each document keeps its own licence (MIT, Apache-2.0, BSD, CC0, CC BY, CC BY-SA, PD), tagged per document. Answers show the licence of every source. This replaces the earlier recommendation of a separate collection. The consequence is the share-alike question in docs/COLLECTION-PLAN.md ("Share-alike interplay"): a generated answer that merges a CC BY-SA source with MIT or Apache docs. A lawyer should read it before charging.
 
 ## 2. Version, fetch date, staleness
 - Every doc chunk carries: project, version or tag (or commit SHA if untagged), fetch date, source URL. Answers show it under the sources: "From server-fetch, v1.2.0 (commit a1b2c3d), fetched 2026-10-22".
@@ -43,16 +43,12 @@ Proposed first four: Fetch, Filesystem, Git, Time. Small, widely used, easy to v
 - Same report-and-remove path as the general library (copyright reports go to the named holder; nothing removed on a claim alone).
 - The collector can later add repos from an allow-list by the same code. Third-party users' own agents stay invite-only, as for the general library.
 
-## 6. The licensing question on manual upload (conflict with earlier decisions)
-Walter said the manual upload could let users pick other licensing models and would cover his books. Earlier decisions: one licence for the shared library (CC BY-SA), NC and ND excluded, and (12:07) not to upload his novels. Options:
-
-(a) Keep the single licence. Manual upload stays CC BY-SA only. Simple, true to "an open library". His books are not uploaded (already his decision).
-
-(b) A private personal shelf per user. Never shared, never searched for anyone else, never in the public library, any licence including all rights reserved. Signed-in only. The user can ask the model about their own books and notes. Consequences: needs per-user storage and retrieval scoped by user id, a delete-everything button, a size cap, and strict isolation tests. A scoping bug would leak a copyrighted book to strangers, which is the main risk. We also store copies and embeddings of material the user may not own, so the declaration "this is mine or I may store it" is needed and the takedown path must work here too. Privacy law applies to personal documents (notes, letters). It does not change the licence of the public library.
-
-(c) Several licences in the shared library (for example CC BY, CC BY-NC, all rights reserved). Consequences: every answer would have to carry a licence per source; NC and ND break "reuse freely"; all-rights-reserved text in shared answers is a copyright problem for us (we would be quoting it to other people); the library can no longer be redistributed as one CC BY-SA corpus; the report path becomes much heavier. This reverses a decision Walter made today.
-
-Recommendation: (a) now, and (b) later as a separate "My shelf" feature once accounts are solid, built behind a flag and tested for isolation before anyone uploads books. Do not do (c). (b) gives Walter the book use-case he described without touching the shared library's licence. Risks of (b): a leak, storage cost, takedown and privacy handling for personal documents, and the temptation to share a shelf later (that would be (c) by the back door). A shelf must never feed the shared library.
+## 6. Manual upload licensing (decided by Walter, 12:35)
+- The shared library takes several open licences, tagged per document: PD, CC0, CC BY, CC BY-SA, MIT, Apache-2.0, BSD. The user picks the licence from that list when uploading; for repos the LICENSE file must agree.
+- User crawl agents: licence detected automatically per document. No licence found: not published (awaiting Walter's confirmation of that default).
+- No private shelf. Everything uploaded is shared, so his novels stay out. The earlier option (b) is dropped.
+- NC, ND, all-rights-reserved and unlicensed stay out, so the $3/month access charge is clean.
+- Open risk: share-alike interplay (see docs/COLLECTION-PLAN.md). Recommendation: a lawyer reads it first.
 
 ## 7. Risks of the whole plan
 - Docs change faster than we refresh: mitigated by commit-SHA checks and showing the fetch date; a weekly lag is still visible.
@@ -61,8 +57,8 @@ Recommendation: (a) now, and (b) later as a separate "My shelf" feature once acc
 - Mixed licences inside one repo: per-file rule, skip when unclear.
 - Hooks like "we indexed X MCP" imply endorsement or affiliation: wording must say "unofficial index of public docs".
 
-## What Walter needs to decide
-1. Separate developer-docs collection with each project's own licence (recommended) or only CC BY and CC0 docs in the main library.
+## What is still open
+1. Confirm "no licence found means not published" for user crawl agents.
 2. Starter set: Fetch, Filesystem, Git, Time (recommended).
-3. Manual upload licensing: (a), (b) later, or (c) (recommended: a now, b later, not c).
-4. Approval to start building the licence check and the first test set.
+3. A lawyer's read of the share-alike interplay before the paid tier.
+4. Approval to start building (per-document licence field and display, licence check from the repo LICENSE file, the first test set).
