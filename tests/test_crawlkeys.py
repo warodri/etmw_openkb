@@ -71,4 +71,17 @@ ok(L.answer_verification(v["token"], "yes"), "rights holder confirms")
 ok(c.execute("SELECT status FROM documents WHERE id=?", (did,)).fetchone()[0] == "removed", "entry removed after confirmation")
 ok(did not in L.live_doc_loaders(), "removed entry is not served any more")
 r = K.submit(k3, B + "/bbc", embed=fake, delay=0); ok(not r["ok"], "the removed text cannot come back as a duplicate-free resubmission")
+# ---- 7-day objection clock: starts at the first copyright report, never resets ----
+c = L.connect(); ck = L.clock(did); ok(ck and ck["due_at"] > ck["started_at"] and not ck["expired"], "7-day clock started by the first copyright report")
+first = ck["started_at"]; c2 = L.connect(); ok(L.start_clock(c2, did) is False, "a second start is refused"); c2.commit(); c2.close()
+ok(L.clock(did)["started_at"] == first, "the clock does not reset")
+ok(L.clock("nope") is None, "no clock without a copyright report")
+c = L.connect(); c.execute("UPDATE report_clock SET due_at='2000-01-01T00:00:00Z' WHERE doc_id=?", (did,)); c.commit(); ok(L.clock(did)["expired"], "an expired clock is reported as expired (bookkeeping only)")
+# ---- daily cap ----
+K.set_account("o4", "CC0", True); k4 = K.create_key("o4", "a4")["key"]; K.DAILY_CAP = 2; K.RATE_PER_MIN = 100
+P["/d1"] = page("d1"); P["/d2"] = page("d2"); P["/d3"] = page("d3")
+rs = [K.submit(k4, B + p, embed=fake, delay=0) for p in ("/d1", "/d2", "/d3")]
+ok(rs[0]["ok"] and rs[1]["ok"] and rs[2]["status"] == 429 and "daily" in rs[2]["reasons"][0], "daily cap: third new entry refused with 429")
+K.set_account("o5", "CC0", True); k5 = K.create_key("o5", "a5")["key"]; P["/d4"] = page("d4"); ok(K.submit(k5, B + "/d4", embed=fake, delay=0)["ok"], "another account has its own cap")
+K.DAILY_CAP = 200; ok(K.DAILY_CAP == 200, "default cap is 200")
 print("crawl key tests done")

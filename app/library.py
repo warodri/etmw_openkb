@@ -6,7 +6,7 @@ after automated checks (no human review before publish); safety comes from the c
 the report-and-remove path, and an append-only audit log. See docs/COLLECTION-PLAN.md.
 """
 import hashlib, json, os, re, sqlite3, time, uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.environ.get("OPENKB_LIBRARY_DB", os.path.join(ROOT, "data", "library.db"))
@@ -275,6 +275,7 @@ def report(doc_id, reason, details="", email="", reporter="anon", claimant="", e
         doc = c.execute("SELECT * FROM documents WHERE id=?", (doc_id,)).fetchone()
         if not doc: c.close(); return None
     rid = "rep-" + uuid.uuid4().hex[:10]
+    if reason == "copyright" and not fixture: start_clock(c, doc_id)
     def finish(outcome, why, message, hide=None, remove=False):
         c.execute("INSERT INTO reports (id, doc_id, reason, details, email, status, created_at, decided_at, decision, reporter, claimant, evidence_url, triage) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                   (rid, doc_id, reason, details, (email or "")[:200], "open" if outcome == "queued" else ("waiting" if outcome == "awaiting-source" else "closed"), now(), None if outcome in ("queued", "awaiting-source") else now(), None if outcome in ("queued", "awaiting-source") else outcome, reporter, (claimant or "")[:200], (evidence_url or "")[:500], why))
@@ -499,3 +500,20 @@ if __name__ == "__main__":
         c = connect()
         for r in c.execute("SELECT ts, event, doc_id, actor, detail FROM audit_log ORDER BY id DESC LIMIT 30"): print(tuple(r))
     else: print("usage: library.py stats | reports | decide <report-id> remove|restore|dismiss | remove <doc-id> [reason] | log")
+
+
+# ---- 7-day objection clock (bookkeeping only: nothing is removed automatically when it runs out) ----
+CLOCK_DAYS = 7
+def start_clock(c, doc_id):
+    """Starts at the FIRST copyright report on a document and never resets, whatever happens after."""
+    c.execute("CREATE TABLE IF NOT EXISTS report_clock (doc_id TEXT PRIMARY KEY, started_at TEXT, due_at TEXT)")
+    if c.execute("SELECT 1 FROM report_clock WHERE doc_id=?", (doc_id,)).fetchone(): return False
+    t = datetime.utcnow(); due = t + timedelta(days=CLOCK_DAYS)
+    c.execute("INSERT INTO report_clock VALUES (?,?,?)", (doc_id, t.strftime("%Y-%m-%dT%H:%M:%SZ"), due.strftime("%Y-%m-%dT%H:%M:%SZ")))
+    log(c, "objection-clock-started", doc_id, "system", json.dumps({"days": CLOCK_DAYS})); return True
+
+def clock(doc_id, db_path=None):
+    c = connect(db_path); c.execute("CREATE TABLE IF NOT EXISTS report_clock (doc_id TEXT PRIMARY KEY, started_at TEXT, due_at TEXT)")
+    r = c.execute("SELECT started_at, due_at FROM report_clock WHERE doc_id=?", (doc_id,)).fetchone(); c.close()
+    if not r: return None
+    return {"started_at": r["started_at"], "due_at": r["due_at"], "expired": r["due_at"] < datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")}

@@ -5,6 +5,7 @@ import library as L, intake as I
 
 TERMS_VERSION = "draft-1"   # the terms text is a proposal until Walter approves it (private draft)
 MAX_KEYS = 3
+DAILY_CAP = 200            # new entries per account per UTC day (3 keys share it)
 RATE_PER_MIN = 6            # submissions per key per minute (each costs one polite fetch and a few embeddings)
 _recent, _rl = collections.defaultdict(collections.deque), threading.Lock()
 DECL = {"own_or_licensed": True, "ok_with_cc_by_sa": True, "may_be_edited": True}   # recorded as accepted through the terms
@@ -66,7 +67,13 @@ def submit(token, url, embed=None, delay=None, db_path=None):
         while q and now - q[0] > 60: q.popleft()
         if len(q) >= RATE_PER_MIN: return {"status": 429, "ok": False, "reasons": ["too many submissions, at most %d per minute per key" % RATE_PER_MIN]}
         q.append(now)
+    c = _c(db_path)
+    c.execute("CREATE TABLE IF NOT EXISTS crawl_adds (owner TEXT, day TEXT, n INTEGER DEFAULT 0, PRIMARY KEY (owner, day))")
+    day = time.strftime("%Y-%m-%d", time.gmtime()); row = c.execute("SELECT n FROM crawl_adds WHERE owner=? AND day=?", (a["owner"], day)).fetchone(); c.close()
+    if row and row["n"] >= DAILY_CAP: return {"status": 429, "ok": False, "reasons": ["daily limit reached: %d new entries per account per day; try again tomorrow (UTC)" % DAILY_CAP]}
     kw = {} if delay is None else {"delay": delay}
     r = I.ingest(url, a["contributor"], a["default_licence"], DECL, embed=embed, db_path=db_path, **kw)
-    c = _c(db_path); c.execute("UPDATE crawl_keys SET last_used=?, submissions=submissions+1 WHERE id=?", (L.now(), a["key_id"])); c.commit(); c.close()
+    c = _c(db_path)
+    if r["ok"]: c.execute("INSERT INTO crawl_adds (owner, day, n) VALUES (?,?,1) ON CONFLICT(owner, day) DO UPDATE SET n=n+1", (a["owner"], day))
+    c.execute("UPDATE crawl_keys SET last_used=?, submissions=submissions+1 WHERE id=?", (L.now(), a["key_id"])); c.commit(); c.close()
     return {"status": 200 if r["ok"] else 422, "ok": r["ok"], "doc_id": r["doc_id"], "licence": r["licence"] if r["ok"] else "", "basis": r["basis"] if r["ok"] else "", "title": r["title"], "reasons": r["reasons"]}
