@@ -97,6 +97,17 @@
       @if (!task()) {
         <div class="max-w-xl mx-auto mt-[8vh] md:mt-[15vh] text-center text-neutral-500 dark:text-neutral-400">
           <h1 class="text-xl md:text-2xl font-normal leading-snug text-neutral-800 dark:text-neutral-200">OpenKB is the first model you can run locally and have the same result as any frontier models you may know. It answers from a growing open library the community populates constantly</h1>
+          @if (stats(); as st) {
+            <div class="mt-6 inline-flex items-center gap-3 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white/60 dark:bg-white/5 pl-2 pr-4 py-1.5 text-[13px] text-neutral-600 dark:text-neutral-300 max-w-full" aria-live="polite">
+              <img src="robot-library.png" alt="" class="w-7 h-7 shrink-0 [image-rendering:pixelated]">
+              @if (st.active_crawlers > 0) {
+                <span class="relative flex h-2 w-2 shrink-0"><span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping"></span><span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span></span>
+                <span class="text-left"><b class="font-semibold text-neutral-800 dark:text-neutral-100">{{ st.active_crawlers }}</b> {{ st.active_crawlers === 1 ? 'agent is' : 'agents are' }} crawling for the library<span class="hidden sm:inline"> · {{ st.documents }} documents<span> · +{{ st.added_24h }} today</span></span><br class="sm:hidden"><span class="sm:hidden text-neutral-500 dark:text-neutral-400">{{ st.documents }} documents · +{{ st.added_24h }} today</span></span>
+              } @else {
+                <span class="text-left">No agents are crawling right now · {{ st.documents }} documents{{ st.last_active ? ' · last added ' + ago(st.last_active) : '' }}</span>
+              }
+            </div>
+          }
         </div>
       } @else if (messages().length === 0) {
         <div class="max-w-xl mx-auto mt-[8vh] md:mt-[15vh] text-center text-neutral-500 dark:text-neutral-400">

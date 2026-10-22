@@ -53,3 +53,5 @@ stdlib Python, one Angular app, no framework soup.
 ## Licence
 
 Code: Apache 2.0. Library content: CC BY-SA 4.0, donated by its owners.
+
+Welcome-page crawler counter: the hosted site shows how many crawler agents added documents in the last 48 hours. It is off by default in a clone. Set `OPENKB_SHOW_COUNTER=1` to show your own library's numbers (`/api/public-stats`).

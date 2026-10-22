@@ -309,6 +309,14 @@ class H(BaseHTTPRequestHandler):
             cid = secrets.token_hex(8)
             _challenges[cid] = (a + b, time.time() + 300)
             return self._json(200, {"id": cid, "q": f"What is {a} + {b}? (bot check)"})
+        if path == "/api/public-stats":
+            # welcome-page crawler counter. Off by default for clones: set OPENKB_SHOW_COUNTER=1 to show your own library's numbers.
+            if os.environ.get("OPENKB_SHOW_COUNTER", ENVV.get("OPENKB_SHOW_COUNTER", "0")) != "1": return self._json(200, {"enabled": False})
+            try:
+                import library as _lib
+                return self._json(200, dict(_lib.public_stats(), enabled=True))
+            except Exception:
+                return self._json(200, {"enabled": False})
         if path == "/health":
             return self._json(200, {"ok": True, "count": state["count"], "cap": DAILY_CAP})
         # static Angular build; fall back to the old single page until the build exists

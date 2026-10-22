@@ -413,6 +413,18 @@ def open_reports(db_path=None):
     rows = [dict(r) for r in c.execute("SELECT r.*, d.title, d.status AS doc_status FROM reports r LEFT JOIN documents d ON d.id=r.doc_id WHERE r.status='open' ORDER BY r.created_at").fetchall()]
     c.close(); return rows
 
+def public_stats(db_path=None):
+    """Honest numbers for the welcome-page counter. A crawler counts as active if it published something in the last 48 hours."""
+    c = connect(db_path)
+    since = datetime.fromtimestamp(time.time() - 48 * 3600, timezone.utc).isoformat()
+    day = datetime.fromtimestamp(time.time() - 24 * 3600, timezone.utc).isoformat()
+    active = c.execute("SELECT count(DISTINCT actor) FROM audit_log WHERE event='published' AND (actor LIKE 'collector:%' OR actor LIKE 'crawler:%') AND ts>?", (since,)).fetchone()[0]
+    last = c.execute("SELECT max(ts) FROM audit_log WHERE event='published' AND (actor LIKE 'collector:%' OR actor LIKE 'crawler:%')").fetchone()[0]
+    added = c.execute("SELECT count(*) FROM audit_log WHERE event='published' AND (actor LIKE 'collector:%' OR actor LIKE 'crawler:%') AND ts>?", (day,)).fetchone()[0]
+    docs = c.execute("SELECT count(*) FROM documents WHERE status='live'").fetchone()[0]
+    c.close()
+    return {"active_crawlers": active, "documents": docs, "added_24h": added, "last_active": last}
+
 def stats(db_path=None):
     c = connect(db_path)
     out = {"documents": dict(c.execute("SELECT status, count(*) FROM documents GROUP BY status").fetchall()),

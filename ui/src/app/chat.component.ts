@@ -195,7 +195,14 @@ export class ChatComponent implements OnInit {
   private authCid = '';
   input = '';
 
+  stats = signal<{ active_crawlers: number; documents: number; added_24h: number; last_active: string | null } | null>(null);
+  ago(ts: string | null | undefined): string {
+    if (!ts) return '';
+    const m = Math.max(0, Math.round((Date.now() - new Date(ts).getTime()) / 60000));
+    return m < 2 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago';
+  }
   ngOnInit(): void {
+    this.api.publicStats().subscribe({ next: (s) => this.stats.set(s.enabled ? (s as any) : null), error: () => this.stats.set(null) });
     this.refresh();
     this.api.authMe().subscribe({ next: (r) => this.userEmail.set(r.email), error: () => {} });
   }

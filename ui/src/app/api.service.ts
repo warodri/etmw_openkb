@@ -86,6 +86,9 @@ export class ApiService {
   }
   uploadDoc(body: object) { return this.http.post<{ job: string }>('/api/library/upload', body); }
 
+  publicStats() {
+    return this.http.get<{ enabled: boolean; active_crawlers?: number; documents?: number; added_24h?: number; last_active?: string | null }>('/api/public-stats');
+  }
   report(body: { doc_id: string; reason: string; details: string; email: string; claimant?: string; holder_contact?: string; evidence_url?: string; statement?: boolean }) {
     return this.http.post<{ id: string; outcome: string; hidden: boolean; message: string }>('/api/report', body);
   }
