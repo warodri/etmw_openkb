@@ -140,7 +140,7 @@ export class ChatComponent implements OnInit {
   }
 
   sourceLine(m: { sources?: string[]; licences?: string[] }): string {
-    return (m.sources || []).map((s, i) => { const l = (m.licences || [])[i]; return l ? s + ' (' + l + ')' : s; }).join(', ');
+    return [...new Set((m.sources || []).map((s, i) => { const l = (m.licences || [])[i]; return l ? s + ' (' + l + ')' : s; }))].join(', ');
   }
 
   openReport(m: { sources?: string[]; source_ids?: string[] }): void {
@@ -334,11 +334,12 @@ export class ChatComponent implements OnInit {
   }
 
   queueAhead = signal(0);
+  readingSource = signal(false);
   private pollQueue(): void {
     this.queueAhead.set(0);
     const t = setInterval(() => {
-      if (!this.waiting()) { clearInterval(t); this.queueAhead.set(0); return; }
-      this.api.queue().subscribe({ next: (r) => this.queueAhead.set(r.ahead || 0), error: () => {} });
+      if (!this.waiting()) { clearInterval(t); this.queueAhead.set(0); this.readingSource.set(false); return; }
+      this.api.queue().subscribe({ next: (r) => { this.queueAhead.set(r.ahead || 0); this.readingSource.set(!!r.reading); }, error: () => {} });
     }, 2500);
   }
   private ask(text: string, taskId: string): void {

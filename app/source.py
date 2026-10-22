@@ -24,7 +24,14 @@ def transform(raw, recipe):
     if recipe in ("ia", "plain"): return _norm(raw)
     return None
 
+READING = [0]   # how many source pages are being read right now (the app shows "Reading the source")
+
 def _fetch_raw(url):
+    READING[0] += 1
+    try: return _fetch_raw2(url)
+    finally: READING[0] -= 1
+
+def _fetch_raw2(url):
     import collector as C
     C.ALLOW.add("archive.org")   # hosts our collectors take from; text_url values come only from them
     with _lock:   # one fetch at a time, polite spacing between requests

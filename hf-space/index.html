@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenKB</title>
+<meta name="description" content="A small local AI model reading one shared open library. Answers cite their sources and licences.">
+<style>
+:root{--bg:#fafaf7;--fg:#1f2328;--mute:#5b6470;--card:#fff;--line:#e3e1d8;--accent:#3b5bdb;--ok:#2f9e44;--off:#b45309}
+@media (prefers-color-scheme:dark){:root{--bg:#14161a;--fg:#e6e8eb;--mute:#9aa3ad;--card:#1b1e23;--line:#2c3037;--accent:#8ea2ff;--ok:#51cf66;--off:#f0a04b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:28px 18px 56px}
+.brand{font-weight:700;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+.brand b{display:inline-block;width:14px;height:14px;background:var(--accent);box-shadow:3px 3px 0 var(--fg)}
+h1{font-size:clamp(20px,3.4vw,26px);font-weight:400;line-height:1.35;margin:22px 0 10px}
+p{margin:.6em 0}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px;color:var(--mute);min-height:36px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--mute)}
+.on .dot{background:var(--ok)}.off .dot{background:var(--off)}
+.cta{display:inline-block;margin:18px 0 6px;padding:13px 22px;min-height:48px;background:var(--accent);color:#fff;border-radius:10px;text-decoration:none;font-weight:600}
+@media (prefers-color-scheme:dark){.cta{color:#0d1020}}
+.cta:focus-visible,a:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.note{font-size:14px;color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:24px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h2{font-size:15px;margin:0 0 6px}
+.card p{font-size:14px;color:var(--mute);margin:0}
+figure{margin:26px 0 0}
+figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;display:block}
+figcaption{font-size:13px;color:var(--mute);margin-top:6px}
+.shots{display:grid;grid-template-columns:1fr;gap:6px}
+footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--mute)}
+footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand"><b aria-hidden="true"></b> OpenKB <span class="note">v0.1 beta</span></div>
+  <h1>OpenKB is the first model you can run locally and have the same result as any frontier models you may know. It answers from a growing open library the community populates constantly</h1>
+  <p id="status" class="pill off" role="status"><span class="dot" aria-hidden="true"></span><span id="status-text">Checking the live demo...</span></p>
+  <p><a class="cta" href="https://openkb--warodri.entertomyworld.com/" target="_blank" rel="noopener">Open the live demo</a></p>
+  <p class="note">The demo runs on one small machine and answers one question at a time. If it is busy you will see a short queue message.</p>
+
+  <div class="grid">
+    <div class="card"><h2>Small model, shared library</h2><p>A small AI model that runs on your own computer reads one shared library. It looks up only the parts it needs.</p></div>
+    <div class="card"><h2>Sources and licences shown</h2><p>Every answer names its sources and the licence of each one. If the answer is not in the library, it says so.</p></div>
+    <div class="card"><h2>Open licences only</h2><p>Public domain, CC0, CC BY, CC BY-SA, MIT, Apache-2.0 and BSD. The library keeps references, not copies.</p></div>
+  </div>
+
+  <figure>
+    <img src="img/answer.jpg" alt="OpenKB answering a question with its sources and licences listed under the answer" loading="lazy">
+    <figcaption>An answer with its sources and licences.</figcaption>
+  </figure>
+
+  <footer>
+    <p><a href="https://github.com/warodri/etmw_openkb" target="_blank" rel="noopener">Code on GitHub</a> (Apache 2.0) &middot; <a href="https://openkb--warodri.entertomyworld.com/how" target="_blank" rel="noopener">How it works</a> &middot; Donations open soon.</p>
+    <p>Copyright concern or a problem with a document? Use the Report button in the app. This page shows no library text and collects no data.</p>
+  </footer>
+</main>
+<script>
+(function () {
+  var API = "https://openkb--warodri.entertomyworld.com/api/public-stats";
+  var box = document.getElementById("status"), txt = document.getElementById("status-text");
+  function set(on, t) { box.className = "pill " + (on ? "on" : "off"); txt.textContent = t; }
+  var ctl = new AbortController(); setTimeout(function () { ctl.abort(); }, 8000);
+  fetch(API, { signal: ctl.signal, credentials: "omit" }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (s) {
+    var d = s.documents != null ? s.documents + " documents in the library" : "Live";
+    set(true, "Demo is online. " + d + (s.active_crawlers ? ", " + s.active_crawlers + " collectors active." : "."));
+  }).catch(function () { set(false, "The live demo looks offline right now. Try again in a little while."); });
+})();
+</script>
+</body>
+</html>
