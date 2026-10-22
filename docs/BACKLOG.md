@@ -17,9 +17,9 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 
 - **Licence decision (Walter, 2026-10-22):** CC BY-SA only, for all content. No donor choice, no NC variant. Open: whether user crawl agents accept only PD/CC0 sources (proposal) - awaiting Walter.
 
-- **Publishing model (Walter, 2026-10-22):** risk-split. Auto-publish from allow-listed PD/CC0 sources (provenance record, one-click takedown, weekly sampled audit). Human review for user submissions, non-listed sites, unclear licence checks. Required: public "Report this" on answers/sources, /report page, removal workflow and log. See docs/COLLECTION-PLAN.md. No build yet.
+- **Publishing model (Walter, 2026-10-22):** risk-split. Auto-publish from allow-listed PD/CC0 sources (provenance record, one-click takedown, weekly sampled audit). SUPERSEDED same day: no human review before publishing at all; user submissions and collectors auto-publish after automated checks. Required: public "Report this" on answers/sources, /report page, removal workflow and log. See docs/COLLECTION-PLAN.md. No build yet.
 
-- **User crawl agents (Walter, 2026-10-22):** they feed the one shared library (grow together, not duplicate work). Accepted licences: PD, CC0, CC BY, CC BY-SA, credit kept in provenance; NC and ND excluded. Always human-reviewed. No build yet.
+- **User crawl agents (Walter, 2026-10-22):** they feed the one shared library (grow together, not duplicate work). Accepted licences: PD, CC0, CC BY, CC BY-SA, credit kept in provenance; NC and ND excluded. Invite-only; auto-publish after automated checks (no human review, Walter 2026-10-22, 08:58); residual licence risk accepted, mitigated by report-and-remove and audit log. No build yet.
 
 ## Done
 
