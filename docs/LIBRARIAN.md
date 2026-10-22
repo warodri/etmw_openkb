@@ -1,5 +1,7 @@
 # Librarian and plug-in path - spec draft (not approved for build)
 
+> Update 2026-10-22: superseded in part by docs/COLLECTION-PLAN.md. Wherever this draft says "maintainer review" or "review queue", read "automatic checks, then publish": Walter decided there is no human review before publishing, and reports are triaged automatically.
+
 Two additions, both keeping the same trust spine as human donations: provenance on
 everything, maintainer review before publish, takedown that works.
 

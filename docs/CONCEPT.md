@@ -29,7 +29,7 @@ People who know something well and want it usable by anyone's AI, not only by th
 
 ## Quality control
 
-The hard part is not code, it is trust. Per-topic maintainers review before merge, like open source. Every entry carries its source. Automated checks catch junk, duplicates, and poisoned content. Everything is versioned, so mistakes roll back.
+The hard part is not code, it is trust. Documents publish after automatic checks, with no person reading them first; reports are triaged automatically and a person only handles unclear cases (see docs/COLLECTION-PLAN.md). Every entry carries its source. Automated checks catch junk, duplicates, and poisoned content. Everything is versioned, so mistakes roll back.
 
 ## Trust and verification
 

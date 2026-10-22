@@ -34,7 +34,7 @@ Donors are readers, writers and neighbours, not developers. Nobody is asked to w
 1. **Submit anything** - a PDF book, DOCX, EPUB, TXT, HTML, whatever you have. You answer three short questions in a form: what it is, who you are (name or handle), and the licence + AI-retrieval consent (EN/ES).
 2. **Intake converts it for you** - an automated step turns the upload into clean Markdown using open-source converters (the plan is [Docling](https://github.com/docling-project/docling), MIT-licensed, strongest on PDFs including scanned pages, with MarkItDown and Pandoc as fallbacks for other formats) and fills the document header from your form answers. Scanned books go through OCR, and OCR makes mistakes - which is what step 3 is for.
 3. **You confirm the preview** - you see the converted document before anyone else does. Nothing goes to review without your OK.
-4. **Maintainer review** - a topic maintainer checks licence, consent, sourcing and duplication, like a code review.
+4. **Automatic checks** - licence, consent declarations, sourcing, duplicates, spam and prompt-injection filters run before publish. No person reads a document first (decision 2026-10-22); safety comes from provenance, the public report path with automatic triage, and an append-only audit log. See docs/COLLECTION-PLAN.md.
 5. **Merged** - the document lands in the repo, the donor log is updated, and the index picks it up on the next build.
 
 Licensing note: book donations raise a real question - whether CC BY-SA 4.0 fits, or books need a retrieval-only option (the model reads and cites, no copying). Undecided; the default stays CC BY-SA 4.0 until the owner decides.

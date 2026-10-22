@@ -235,7 +235,7 @@
         <ul>
           <li>Every document is donated by someone who confirmed it is theirs to share.</li>
           <li>Every document passes automatic checks (licence, duplicates, spam) before it joins the library.</li>
-          <li>Anything can be taken down on request - no questions asked. Use "Report this" on any answer, or the Report content page.</li>
+          <li>Anyone can report content that should not be here. Reports are checked automatically: clear cases are removed at once, the rest go to a person.</li>
         </ul>
       }
 
@@ -301,17 +301,13 @@
   <div class="fixed inset-0 z-40 bg-black/50 flex items-end md:items-center justify-center" (click)="reportOpen.set(false)">
     <div class="w-full md:max-w-md max-h-[92dvh] overflow-y-auto rounded-t-2xl md:rounded-2xl bg-white dark:bg-[#2a2a2a] text-neutral-800 dark:text-neutral-200 p-5 text-[14px]" (click)="$event.stopPropagation()" role="dialog" aria-label="Report this">
       @if (reportState() === 'done') {
-        <h2 class="m-0 mb-2 text-lg font-semibold">Thank you. Report received.</h2>
-        @if (reportResult().endsWith('|hidden')) {
-          <p class="mt-0">This document has been hidden from answers while we look at it. We decide quickly, and anything confirmed is removed for good.</p>
-        } @else {
-          <p class="mt-0">We will review it and remove the document if it should not be here.</p>
-        }
-        <p class="text-neutral-500 dark:text-neutral-400 text-[13px]">Report id: {{ reportResult().split('|')[0] }}. <a routerLink="/report" class="underline" (click)="reportOpen.set(false)">What happens next</a></p>
+        <h2 class="m-0 mb-2 text-lg font-semibold">{{ reportOutcome() === 'removed' ? 'Done. The document was removed.' : reportOutcome() === 'dismissed' ? 'We could not act on this one' : 'Report received' }}</h2>
+        <p class="mt-0">{{ reportMsg() }}</p>
+        <p class="text-neutral-500 dark:text-neutral-400 text-[13px]">Report id: {{ reportResult() }}. <a routerLink="/report" class="underline" (click)="reportOpen.set(false)">How reports are handled</a></p>
         <button class="w-full min-h-[44px] mt-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent cursor-pointer" (click)="reportOpen.set(false)">Close</button>
       } @else {
         <h2 class="m-0 mb-1 text-lg font-semibold">Report this</h2>
-        <p class="mt-0 mb-3 text-neutral-500 dark:text-neutral-400 text-[13px]">Tell us what should not be in the library. No account needed.</p>
+        <p class="mt-0 mb-3 text-neutral-500 dark:text-neutral-400 text-[13px]">Tell us what should not be in the library. No account needed. Reports are checked automatically.</p>
         @if (reportChoices().length > 1) {
           <label class="block mb-3">Which source?
             <select class="mt-1 w-full min-h-[44px] px-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" [value]="reportDoc()" (change)="reportDoc.set($any($event.target).value)">
@@ -326,12 +322,23 @@
             @for (r of reasons; track r.v) { <option [value]="r.v">{{ r.t }}</option> }
           </select>
         </label>
-        <label class="block mb-3">Details (optional)
+        @if (reportReason() === 'copyright') {
+          <label class="block mb-3">Your name (the rights holder, or who you act for)
+            <input class="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" maxlength="200" [value]="reportClaimant()" (input)="reportClaimant.set($any($event.target).value)">
+          </label>
+          <label class="block mb-3">Link to the original
+            <input type="url" class="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" maxlength="500" placeholder="https://" [value]="reportUrl()" (input)="reportUrl.set($any($event.target).value)">
+          </label>
+        }
+        <label class="block mb-3">{{ reportReason() === 'personal-data' ? 'Quote the exact text that has the personal information' : 'Details (optional)' }}
           <textarea class="mt-1 w-full min-h-[84px] px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" maxlength="1500" [value]="reportDetails()" (input)="reportDetails.set($any($event.target).value)"></textarea>
         </label>
-        <label class="block mb-3">Your email (optional, only to tell you the outcome)
+        <label class="block mb-3">{{ reportReason() === 'copyright' ? 'Your email (required, so we can reach you)' : 'Your email (optional, only to tell you the outcome)' }}
           <input type="email" class="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" [value]="reportEmail()" (input)="reportEmail.set($any($event.target).value)">
         </label>
+        @if (reportReason() === 'copyright') {
+          <label class="flex items-start gap-3 mb-3"><input type="checkbox" class="mt-1" [checked]="reportStatement()" (change)="reportStatement.set($any($event.target).checked)"><span class="text-[13px]">I am the owner of this work or authorised to act for the owner, and I believe in good faith it is used here without permission.</span></label>
+        }
         @if (reportState() === 'error') { <p class="text-red-600 dark:text-red-400 mt-0">{{ reportMsg() }}</p> }
         <div class="flex gap-2">
           <button class="flex-1 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent cursor-pointer" (click)="reportOpen.set(false)">Cancel</button>

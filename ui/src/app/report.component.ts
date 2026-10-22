@@ -29,8 +29,8 @@ export class ReportComponent {
     if (this.state() === 'sending') return;
     this.state.set('sending'); this.msg.set('');
     const d = ('Document or link: ' + this.what() + '\n' + this.details()).slice(0, 1900);
-    this.api.report('general', this.reason(), d, this.email()).subscribe({
-      next: (r) => { this.state.set('done'); this.msg.set(r.id); },
+    this.api.report({ doc_id: 'general', reason: this.reason(), details: d, email: this.email() }).subscribe({
+      next: (r) => { this.state.set(r.outcome === 'needs-evidence' ? 'error' : 'done'); this.msg.set(r.outcome === 'needs-evidence' ? r.message : r.id + ': ' + r.message); },
       error: (e) => { this.state.set('error'); this.msg.set(e?.error?.error || 'Could not send the report. Try again in a moment.'); },
     });
   }

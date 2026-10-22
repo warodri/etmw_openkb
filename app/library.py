@@ -17,7 +17,6 @@ PER_USER_DAILY_DOCS = 20
 # Accepted licences (normalised key -> display). NC and ND are never accepted.
 ACCEPTED = {"pd": "Public domain", "cc0": "CC0", "cc-by": "CC BY", "cc-by-sa": "CC BY-SA"}
 REPORT_REASONS = ("copyright", "personal-data", "harmful", "quality", "other")
-HIDE_AT_ONCE = ("copyright", "personal-data")
 
 INJECTION = [r"ignore (all |any )?(previous|prior|above) (instructions|prompts)", r"disregard (the )?(system|previous) (prompt|instructions)",
              r"you are now (a|an|the)\b", r"(reveal|print|show) (your|the) (system )?prompt", r"\bas an ai language model\b",
@@ -36,10 +35,14 @@ def connect(path=None):
     CREATE TABLE IF NOT EXISTS chunks (doc_id TEXT, idx INTEGER, text TEXT, vec TEXT, PRIMARY KEY (doc_id, idx));
     CREATE TABLE IF NOT EXISTS reports (id TEXT PRIMARY KEY, doc_id TEXT, reason TEXT, details TEXT, email TEXT, status TEXT,
         created_at TEXT, decided_at TEXT, decision TEXT);
+    CREATE TABLE IF NOT EXISTS reporters (reporter TEXT PRIMARY KEY, upheld INTEGER DEFAULT 0, dismissed INTEGER DEFAULT 0);
     CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, event TEXT, doc_id TEXT, actor TEXT, detail TEXT);
     CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit_log BEGIN SELECT RAISE(ABORT, 'audit_log is append-only'); END;
     CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit_log BEGIN SELECT RAISE(ABORT, 'audit_log is append-only'); END;
     """)
+    have = [r[1] for r in c.execute("PRAGMA table_info(reports)")]
+    for col in ("reporter TEXT", "claimant TEXT", "evidence_url TEXT", "triage TEXT"):
+        if col.split()[0] not in have: c.execute("ALTER TABLE reports ADD COLUMN " + col)
     return c
 
 def log(c, event, doc_id=None, actor="system", detail=""):
@@ -158,28 +161,145 @@ def restore(doc_id, actor, note="", db_path=None):
     if n: log(c, "restored", doc_id, actor, note)
     c.commit(); c.close(); return bool(n)
 
-def report(doc_id, reason, details="", email="", db_path=None):
-    """Public report. Copyright and personal-data reports hide the document at once (soft takedown)."""
+# ---- report triage: decide automatically whether a report is credible ----
+import ipaddress, socket, urllib.parse, urllib.request
+PII = [r"[\w.+-]+@[\w-]+\.[\w.-]+", r"(?<!\d)(?:\+?\d[\d ().-]{8,}\d)(?!\d)", r"\b\d{3}-\d{2}-\d{4}\b", r"\b[A-Z]{2}\d{6,}\b"]
+NOTICE = re.compile(r"(©|\(c\)|copyright|all rights reserved)", re.I)
+PERMISSIVE = re.compile(r"(creative commons|public domain|cc0|cc by|gnu free documentation|open licen)", re.I)
+HIDE_AT_ONCE = ("copyright",)  # only a complete notice hides at once; see report()
+MULTI_HIDE = 3                 # distinct reporters needed to hide on volume alone
+
+def _safe_url(u):
+    pr = urllib.parse.urlparse(u or "")
+    if pr.scheme not in ("http", "https") or not pr.hostname: return False
+    try:
+        for fam, _, _, _, sa in socket.getaddrinfo(pr.hostname, None):
+            ip = ipaddress.ip_address(sa[0])
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast: return False
+    except Exception: return False
+    return True
+
+def fetch_page_text(url, limit=2_000_000):
+    """Fetch an evidence page as plain text. Refuses private addresses. Returns None on any failure."""
+    if not _safe_url(url): return None
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "OpenKB-report-check/1.0"})
+        raw = urllib.request.urlopen(req, timeout=15).read(limit).decode("utf-8", "replace")
+        raw = re.sub(r"(?is)<(script|style).*?</\1>", " ", raw)
+        return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", raw))
+    except Exception:
+        return None
+
+def _words(t): return re.findall(r"\w+", t.lower())
+def _shingles(t, n=8):
+    w = _words(t); return {" ".join(w[i:i + n]) for i in range(0, max(0, len(w) - n + 1))}
+def overlap(doc_text, page_text):
+    """Containment of the document's text in the evidence page (0..1) and the reverse; returns the larger."""
+    a, b = _shingles(doc_text), _shingles(page_text)
+    if not a or not b: return 0.0
+    i = len(a & b); return max(i / len(a), i / len(b))
+
+def _doc_text(c, doc_id):
+    return " ".join(r[0] for r in c.execute("SELECT text FROM chunks WHERE doc_id=? ORDER BY idx", (doc_id,)))
+
+def _reporter_rep(c, reporter):
+    r = c.execute("SELECT upheld, dismissed FROM reporters WHERE reporter=?", (reporter,)).fetchone()
+    return (r[0], r[1]) if r else (0, 0)
+
+def _bump(c, reporter, field):
+    c.execute("INSERT OR IGNORE INTO reporters (reporter) VALUES (?)", (reporter,))
+    c.execute(f"UPDATE reporters SET {field}={field}+1 WHERE reporter=?", (reporter,))
+
+def report(doc_id, reason, details="", email="", reporter="anon", claimant="", evidence_url="", statement=False, fetch=fetch_page_text, db_path=None):
+    """Public report with automatic triage. Returns {id, outcome, hidden, message} or None if refused.
+    outcome: removed (obviously valid) | dismissed (bogus or unsupported) | queued (ambiguous, maintainer looks) |
+             needs-evidence (not enough to act on; the reporter is told what to add)."""
     if reason not in REPORT_REASONS: return None
+    details = (details or "").strip()[:2000]
     c = connect(db_path)
-    fixture = (doc_id or "").startswith(("fixture:", "general"))  # test corpus and site-level reports have no row in the documents table
-    if not fixture and not c.execute("SELECT 1 FROM documents WHERE id=?", (doc_id,)).fetchone(): c.close(); return None
+    fixture = (doc_id or "").startswith(("fixture:", "general"))
+    doc = None
+    if not fixture:
+        doc = c.execute("SELECT * FROM documents WHERE id=?", (doc_id,)).fetchone()
+        if not doc: c.close(); return None
     rid = "rep-" + uuid.uuid4().hex[:10]
-    c.execute("INSERT INTO reports VALUES (?,?,?,?,?,?,?,NULL,NULL)", (rid, doc_id, reason, (details or "")[:2000], (email or "")[:200], "open", now()))
-    log(c, "reported", doc_id, "public", json.dumps({"report": rid, "reason": reason}))
-    c.commit(); c.close()
-    if reason in HIDE_AT_ONCE and not fixture: takedown(doc_id, "auto:" + rid, f"hidden pending decision ({reason})", hard=False, db_path=db_path)
-    return rid
+    def finish(outcome, why, message, hide=None, remove=False):
+        c.execute("INSERT INTO reports (id, doc_id, reason, details, email, status, created_at, decided_at, decision, reporter, claimant, evidence_url, triage) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                  (rid, doc_id, reason, details, (email or "")[:200], "open" if outcome == "queued" else "closed", now(),
+                   None if outcome == "queued" else now(), None if outcome == "queued" else outcome, reporter, (claimant or "")[:200], (evidence_url or "")[:500], why))
+        log(c, "reported", doc_id, "public:" + reporter, json.dumps({"report": rid, "reason": reason, "outcome": outcome, "why": why}))
+        if outcome == "dismissed": _bump(c, reporter, "dismissed")
+        if remove and doc: _bump(c, reporter, "upheld")
+        c.commit(); c.close()
+        if remove: takedown(doc_id, "auto:" + rid, f"removed automatically after report {rid}: {why}", hard=True, db_path=db_path)
+        elif hide is True: takedown(doc_id, "auto:" + rid, f"hidden pending decision ({why})", hard=False, db_path=db_path)
+        elif hide is False and doc and doc["status"] == "hidden": restore(doc_id, "auto:" + rid, why, db_path=db_path)
+        return {"id": rid, "outcome": outcome, "hidden": bool(hide) and not remove, "message": message}
+    # abuse: repeats and low reputation
+    if not fixture and c.execute("SELECT 1 FROM reports WHERE doc_id=? AND reporter=?", (doc_id, reporter)).fetchone():
+        return finish("dismissed", "duplicate report from the same reporter", "You already reported this document. It is being handled.")
+    up, dis = _reporter_rep(c, reporter)
+    if dis >= 3 and up == 0: return finish("dismissed", "reporter has several earlier reports that did not hold up", "We could not accept this report automatically.")
+    if len(re.sub(r"\W+", "", details)) < 8 and reason != "copyright" and reason != "quality": return finish("needs-evidence", "no details", "Please say what is wrong, and for personal information quote the exact text.")
+    if re.search(r"https?://\S+.*https?://\S+.*https?://\S+", details) or any(re.search(p, details.lower()) for p in SPAM):
+        return finish("dismissed", "report text looks like spam", "We could not accept this report automatically.")
+    text = _doc_text(c, doc_id) if doc else ""
+    if fixture:
+        ok = len(details) >= 30
+        return finish("queued" if ok else "dismissed", "test-corpus or site-level report", "Thank you. We will look at this." if ok else "Please add more detail.")
+    # ---- by reason ----
+    if reason == "copyright":
+        if not (claimant.strip() and re.match(r"^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$", email or "") and re.match(r"^https?://", evidence_url or "") and statement):
+            return finish("needs-evidence", "copyright notice incomplete", "To act on a copyright report we need: your name, your email, a link to where the original is, and your confirmation that you are the owner or authorised to act. Please add them and send again.")
+        page = fetch(evidence_url)
+        if page is None: return finish("queued", "evidence page could not be fetched", "Received. We could not open your link automatically, so a person will look. The document is hidden meanwhile.", hide=True)
+        ov = overlap(text, page)
+        dom_doc = urllib.parse.urlparse(doc["source_url"] or "").hostname
+        dom_ev = urllib.parse.urlparse(evidence_url).hostname
+        if ov < 0.10: return finish("dismissed", f"evidence page does not contain the document (overlap {ov:.2f})", "We checked your link and it does not contain this document's text, so we could not act. If you meant another link, send it again.", hide=False)
+        permissive, notice = bool(PERMISSIVE.search(page)), bool(NOTICE.search(page))
+        if ov >= 0.5 and notice and not permissive and dom_ev != dom_doc:
+            return finish("removed", f"evidence page matches the text (overlap {ov:.2f}) and carries a copyright notice", "Thank you. We checked your link, it matches, and the document has been removed.", remove=True)
+        return finish("queued", f"partial or unclear match (overlap {ov:.2f}, notice={notice}, permissive licence on page={permissive})", "Received. The match is not clear-cut, so a person will decide. The document is hidden meanwhile." if doc["origin"] != "collector" else "Received. A person will decide.", hide=(doc["origin"] != "collector"))
+    if reason == "personal-data":
+        sn = details
+        norm = lambda t: re.sub(r"\s+", " ", t.lower())
+        found = len(sn) >= 12 and norm(sn) in norm(text)
+        if not found:
+            q = re.findall(r"\"([^\"]{12,})\"", details)
+            found = any(norm(x) in norm(text) for x in q)
+            if not q and len(sn) < 12: return finish("needs-evidence", "no quoted text", "Please quote the exact text that contains the personal information.")
+        if not found: return finish("dismissed", "quoted text not found in the document", "We could not find that text in the document, so we could not act. Please quote it exactly.")
+        if any(re.search(p, sn) for p in PII): return finish("removed", "quoted text is in the document and is a personal identifier", "Thank you. The text is in the document and the document has been removed.", remove=True)
+        return finish("queued", "quoted text found but not an obvious identifier", "Received. A person will decide.", hide=_multi(c, doc_id, reporter))
+    # harmful / quality / other
+    bad = check_text(text) if text else []
+    if reason in ("harmful", "quality") and bad:
+        return finish("removed", "document now fails the automatic checks: " + "; ".join(bad), "Thank you. The document failed our automatic checks and has been removed.", remove=True)
+    n = c.execute("SELECT count(DISTINCT reporter) FROM reports WHERE doc_id=? AND reason=? AND created_at>?", (doc_id, reason, datetime.fromtimestamp(time.time() - 7 * 86400, timezone.utc).isoformat())).fetchone()[0] + 1
+    if reason == "quality":
+        if n >= MULTI_HIDE: return finish("queued", f"{n} separate quality reports", "Received. A person will look.")
+        return finish("dismissed", "single quality report, noted", "Thanks. Noted. If several people report it, it gets looked at.")
+    if reason == "harmful":
+        return finish("queued", "harmful report with details", "Received. A person will decide.", hide=_multi(c, doc_id, reporter))
+    return finish("queued" if len(details) >= 30 else "dismissed", "other", "Received." if len(details) >= 30 else "Please add more detail.")
+
+def _multi(c, doc_id, reporter):
+    """True when enough distinct reporters (including this one) have reported the document in 7 days."""
+    since = datetime.fromtimestamp(time.time() - 7 * 86400, timezone.utc).isoformat()
+    n = c.execute("SELECT count(DISTINCT reporter) FROM reports WHERE doc_id=? AND created_at>? AND (triage NOT LIKE 'duplicate%' AND triage NOT LIKE '%spam%')", (doc_id, since)).fetchone()[0] + 1
+    return n >= MULTI_HIDE
 
 def decide_report(rid, decision, actor, db_path=None):
-    """decision: 'remove' (hard takedown), 'restore', or 'dismiss' (keep as is)."""
+    """Maintainer decision on a queued report: 'remove' (hard takedown), 'restore', or 'dismiss' (keep as is)."""
     c = connect(db_path); r = c.execute("SELECT * FROM reports WHERE id=? AND status='open'", (rid,)).fetchone()
     if not r or decision not in ("remove", "restore", "dismiss"): c.close(); return False
     c.execute("UPDATE reports SET status='closed', decided_at=?, decision=? WHERE id=?", (now(), decision, rid))
+    _bump(c, r["reporter"] or "anon", "upheld" if decision == "remove" else "dismissed")
     log(c, "report-decided", r["doc_id"], actor, json.dumps({"report": rid, "decision": decision}))
     c.commit(); c.close()
     if decision == "remove": takedown(r["doc_id"], actor, f"removed after report {rid}", hard=True, db_path=db_path)
-    elif decision == "restore" or decision == "dismiss": restore(r["doc_id"], actor, f"report {rid} {decision}", db_path=db_path)
+    else: restore(r["doc_id"], actor, f"report {rid} {decision}", db_path=db_path)
     return True
 
 def open_reports(db_path=None):

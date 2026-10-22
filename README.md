@@ -37,8 +37,8 @@ The library grows together, not by everyone duplicating the same work: people an
   Python server with rate limits, daily caps, and a request log.
 - **Agent mode** - opencode drives the same library through a read-only MCP
   bridge with its own quota, so agents can never eat the users' allowance.
-- **Trust rules** - consent before donation, maintainer review before publish,
-  takedown on request. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+- **Trust rules** - consent before donation, automatic checks before publish,
+  reports checked automatically (a person only handles unclear cases), takedown on request. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Contribute
 

@@ -44,15 +44,26 @@ Access is invite-only. How to request an invitation (to be written on the /agent
 Reuses the existing donate pipeline: upload (PDF, Word, scans, photos) -> convert -> preview of the text -> three declarations -> automated checks -> join the library under CC BY-SA, credited, with a provenance record. No human review before publishing. It is built behind the closed switch, so the page can keep saying "opens soon" while Walter and a few testers use it. Walter's own book is the first test document, by his choice.
 
 ## 4. Reporting and removal (required before any auto-publish)
+Decision 2026-10-22 (Walter): no human validates content, and no human validates reports either. Reports are triaged automatically; a person acts only when the case is not obvious.
+
 Public reporting:
-- A visible "Report this" on every answer and on every source shown under an answer. One tap, no sign-in needed. Fields: which document or answer (filled automatically), reason (copyright, personal data, harmful, wrong or low quality, other), free text, optional email for a reply.
-- A /report page, plain English: what you can report, what happens next, who decides (the maintainer), how fast (target: content reported for copyright or personal data is hidden within 24 hours, then removed or restored), and how to contact us directly. Linked from the footer and the sidebar.
-Removal workflow:
-1. Report arrives, gets an id, goes to the maintainer queue, reporter gets the id.
-2. Copyright and personal-data reports hide the document from answers immediately (soft takedown). Other reasons are handled next. This is after publication, not a gate before it.
-3. Maintainer decides: remove for good (text, chunks, vectors, source record) which is the default, restore, or fix. The reporter is told the outcome if they left an email.
-4. One-click takedown for the maintainer is the same action, usable any time.
-Removal log: every report and every removal is written to an append-only log (what, when, reason, who decided, outcome), so the library can show it handled each case. A source that causes repeated valid reports is dropped from the allow-list.
+- A visible "Report this" on every answer with sources. One tap, no sign-in. A /report page in plain English explains what is checked, what is removed at once, and what goes to a person.
+- Reports are not hidden on arrival. Immediate hide on any report is a griefing vector (anyone could knock out any document). The safe automatic rule is below.
+
+Automatic triage (library.report):
+- Abuse controls: 10 reports/hour per address, one report per reporter per document, spam and link-stuffing patterns dismissed, per-reporter reputation (three earlier reports that did not hold up and none upheld: ignored automatically).
+- Copyright: needs claimant name, email, link to the original and an ownership statement (a complete notice). Incomplete: the reporter is told what to add, nothing happens to the document. Complete: the evidence page is fetched (public addresses only) and compared with the document by 8-word overlap. Overlap under 10%: dismissed as unsupported, document stays live. Overlap 50% or more, page carries a copyright notice, no permissive licence on the page, and the page is not the document's own source: removed automatically. Anything in between, an unreachable link, a permissive licence, or the same domain as the source: queued for a person. Queued user documents are hidden meanwhile; collector documents (public domain sources) stay live while queued.
+- Personal information: the reporter must quote the exact text. Not found in the document: dismissed. Found and it contains an email, phone, ID or similar identifier: removed automatically. Found but not an obvious identifier: queued.
+- Harmful or quality: the document is rerun through the automatic checks; failing them removes it. Otherwise harmful reports are queued with details, hidden only when 3 separate reporters agree within 7 days; quality reports are noted and queued only at 3 separate reporters.
+- Everything is written to the audit log with the reason for the outcome.
+
+Maintainer queue: only reports marked queued. Commands: `python3 app/library.py reports | decide <id> remove|restore|dismiss | remove <doc-id> | log`. Target 24 hours. Each decision updates the reporter's reputation.
+
+Residual risks, stated plainly:
+- A determined griefer can copy a document's text onto a page with a copyright notice and report it; the document would be removed automatically. Mitigation: low reputation, rate limits, the audit log, and the contributor can re-submit. Collector documents from public domain sources are never auto-removed on a copyright claim whose page is the same domain; they go to a person. A date or archive check on the evidence page is a later improvement.
+- Personal data is removed at the document level (no redaction yet).
+- The evidence fetch makes our server open a stranger's link; it refuses private and local addresses, caps size and time.
+- Overlap thresholds (10% / 50%) are first guesses. Tune after real reports.
 
 Weekly audit: each week a random sample of auto-published documents (suggest 20) is checked by the maintainer for licence and quality. Results are logged. A failed sample pauses that source or user key until looked at.
 

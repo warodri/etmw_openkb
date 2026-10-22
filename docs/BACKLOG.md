@@ -21,6 +21,8 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 
 - **User crawl agents (Walter, 2026-10-22):** they feed the one shared library (grow together, not duplicate work). Accepted licences: PD, CC0, CC BY, CC BY-SA, credit kept in provenance; NC and ND excluded. Invite-only; auto-publish after automated checks (no human review, Walter 2026-10-22, 08:58); residual licence risk accepted, mitigated by report-and-remove and audit log. No build yet.
 
+- **Report triage (Walter, 2026-10-22, 10:04):** reports are triaged automatically (rate limits, dedupe, reputation, evidence check for copyright, quoted-text check for personal data); obvious = auto-remove, bogus = dismiss + log, ambiguous = maintainer queue. No hide-on-any-report. See docs/COLLECTION-PLAN.md section 4.
+
 ## Done
 
 - **Pages 1-3 shipped** (2026-10-21): /agent (agent mode guide), /how (How this works), /donate (donations CLOSED, "opens soon", LLM/agent path documented only). Sidebar links updated. Awaiting Walter's review; the machine-gathered licensing decision stays his.

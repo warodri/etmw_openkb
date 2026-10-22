@@ -119,6 +119,10 @@ export class ChatComponent implements OnInit {
   reportState = signal<'idle' | 'sending' | 'done' | 'error'>('idle');
   reportResult = signal('');
   reportMsg = signal('');
+  reportClaimant = signal('');
+  reportUrl = signal('');
+  reportStatement = signal(false);
+  reportOutcome = signal('');
   readonly reasons = [
     { v: 'copyright', t: 'It is copyrighted and should not be here' },
     { v: 'personal-data', t: 'It has personal or private information' },
@@ -138,16 +142,17 @@ export class ChatComponent implements OnInit {
     const ch = this.sourceChoices(m);
     this.reportChoices.set(ch); this.reportDoc.set(ch[0]?.id || '');
     this.reportReason.set('copyright'); this.reportDetails.set(''); this.reportEmail.set('');
-    this.reportState.set('idle'); this.reportMsg.set(''); this.reportResult.set(''); this.reportOpen.set(true);
+    this.reportState.set('idle'); this.reportMsg.set(''); this.reportResult.set(''); this.reportClaimant.set(''); this.reportUrl.set(''); this.reportStatement.set(false); this.reportOutcome.set(''); this.reportOpen.set(true);
   }
 
   sendReport(): void {
     if (this.reportState() === 'sending') return;
     this.reportState.set('sending'); this.reportMsg.set('');
-    this.api.report(this.reportDoc(), this.reportReason(), this.reportDetails(), this.reportEmail()).subscribe({
+    this.api.report({ doc_id: this.reportDoc(), reason: this.reportReason(), details: this.reportDetails(), email: this.reportEmail(),
+      claimant: this.reportClaimant(), evidence_url: this.reportUrl(), statement: this.reportStatement() }).subscribe({
       next: (r) => {
-        this.reportState.set('done');
-        this.reportResult.set(r.id + (r.hidden ? '|hidden' : ''));
+        this.reportOutcome.set(r.outcome); this.reportMsg.set(r.message); this.reportResult.set(r.id);
+        this.reportState.set(r.outcome === 'needs-evidence' ? 'error' : 'done');
       },
       error: (e) => { this.reportState.set('error'); this.reportMsg.set(e?.error?.error || 'Could not send the report. Try again in a moment.'); },
     });

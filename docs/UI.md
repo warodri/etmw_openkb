@@ -24,7 +24,7 @@ Chat-shaped, task-organised. Familiar to anyone who has used ChatGPT; honest abo
 The UI teaches, in this order:
 
 1. **How this works** - three sentences: small local reader, community library, answers are sourced not "true". Plus the trust rules (consent, review, takedown).
-2. **Upload / donate** - the intake flow from ARCHITECTURE.md: upload anything, three form questions, preview, maintainer review. Donations open once consent review closes.
+2. **Upload / donate** - the intake flow from ARCHITECTURE.md: upload anything, three form questions, preview, automatic checks. Donations open once consent review closes.
 3. **Host it yourself (Janus, optional)** - a guide that walks to Janus for serving OpenKB from your own computer. Clearly marked: optional, and an ETMW product; OpenKB works fully without it.
 
 ## Stack

@@ -6,7 +6,7 @@
   </header>
   <main class="max-w-2xl mx-auto px-4 md:px-6 pb-16 leading-relaxed text-[15px]">
     <h1 class="mt-8 mb-2 text-2xl md:text-3xl font-semibold">Something here should not be here? Tell us.</h1>
-    <p class="mt-0 text-neutral-500 dark:text-neutral-400">OpenKB publishes documents after automatic checks, with no person reading them first. That only works if removing a document is easy and fast. This page is how.</p>
+    <p class="mt-0 text-neutral-500 dark:text-neutral-400">OpenKB publishes documents after automatic checks, with no person reading them first. That only works if reports are easy to make and are checked fast. Reports are checked automatically too, so clear cases are handled in seconds and people only look at the unclear ones.</p>
 
     <h2 class="text-xl font-semibold mt-8 mb-3">What you can report</h2>
     <ul class="pl-5 space-y-1.5 mt-0 list-disc">
@@ -19,13 +19,15 @@
 
     <h2 class="text-xl font-semibold mt-8 mb-3">What happens next</h2>
     <ol class="pl-5 space-y-1.5 mt-0 list-decimal">
-      <li>You get a report id straight away.</li>
-      <li><b>Copyright and personal-information reports hide the document from every answer immediately.</b> It stays hidden until it is decided.</li>
-      <li>The OpenKB maintainer decides: remove it for good (text and search data deleted), put it back, or leave it as is. Target: within 24 hours.</li>
-      <li>If you left an email, we tell you the outcome.</li>
-      <li>Every report and every removal is written to a log that cannot be edited afterwards.</li>
+      <li>You get a report id straight away, and an automatic check starts.</li>
+      <li><b>Copyright.</b> Give your name, your email, a link to the original and confirm you are the owner or authorised. We open your link and compare it with the document. A clear match on a page that carries a copyright notice: the document is removed at once. No match: the report is dismissed. Unclear: the document is hidden and a person decides.</li>
+      <li><b>Personal information.</b> Quote the exact text. If it is in the document and it is an identifier such as an email, phone or ID number, the document is removed at once. If we cannot find the text, the report is dismissed. Otherwise a person decides.</li>
+      <li><b>Harmful or wrong.</b> The document goes through the automatic checks again. If it fails, it is removed. Several separate reports hide it until a person looks.</li>
+      <li>Reports that do not hold up are dismissed and logged. A reporter whose reports keep failing is ignored automatically.</li>
+      <li>A person only handles the unclear cases, with a target of 24 hours. If you left an email, we tell you the outcome.</li>
+      <li>Every report and every removal goes into a log that cannot be edited afterwards.</li>
     </ol>
-    <p>If a source keeps causing valid reports, we stop accepting content from it. Removal does not need a reason or a lawyer's letter. If you are a rights holder, just report it.</p>
+    <p>If a source keeps causing valid reports, we stop accepting content from it. Rights holders: the details above are all we need, and they are checked in seconds. The form below is for things you saw elsewhere; it goes to a person.</p>
 
     <h2 class="text-xl font-semibold mt-8 mb-3">Send a report</h2>
     @if (state() === 'done') {
