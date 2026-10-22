@@ -139,6 +139,12 @@ export class ChatComponent implements OnInit {
     return out;
   }
 
+  sourceItems(m: { sources?: string[]; licences?: string[]; source_urls?: string[] }): { label: string; url: string }[] {
+    const seen = new Set<string>(); const out: { label: string; url: string }[] = [];
+    (m.sources || []).forEach((s, i) => { const l = (m.licences || [])[i]; const label = l ? s + ' (' + l + ')' : s; if (seen.has(label)) return; seen.add(label); out.push({ label, url: (m.source_urls || [])[i] || '' }); });
+    return out;
+  }
+
   sourceLine(m: { sources?: string[]; licences?: string[] }): string {
     return [...new Set((m.sources || []).map((s, i) => { const l = (m.licences || [])[i]; return l ? s + ' (' + l + ')' : s; }))].join(', ');
   }
@@ -352,7 +358,7 @@ export class ChatComponent implements OnInit {
     this.error.set(null);
     this.messages.update((m) => [...m, { role: 'user', text }]);
     this.api.ask(text, taskId).subscribe({
-      next: (r) => this.typeOut(r.answer, r.sources, r.not_found, r.source_ids, r.licences),
+      next: (r) => this.typeOut(r.answer, r.sources, r.not_found, r.source_ids, r.licences, r.source_urls),
       error: (e) => {
         this.busy.set(false);
         this.waiting.set(false);
@@ -366,10 +372,10 @@ export class ChatComponent implements OnInit {
 
   /** Client-side typewriter: the full answer is already here; reveal it quickly,
    *  then show sources and the refusal box at the end. The server answer is unchanged. */
-  private typeOut(full: string, sources: string[], notFound: boolean, sourceIds: string[] = [], licences: string[] = []): void {
+  private typeOut(full: string, sources: string[], notFound: boolean, sourceIds: string[] = [], licences: string[] = [], sourceUrls: string[] = []): void {
     this.waiting.set(false);
     const finish = () => {
-      this.messages.update((m) => [...m.slice(0, -1), { role: 'assistant', text: full, sources, source_ids: sourceIds, licences, not_found: notFound }]);
+      this.messages.update((m) => [...m.slice(0, -1), { role: 'assistant', text: full, sources, source_ids: sourceIds, licences, source_urls: sourceUrls, not_found: notFound }]);
       this.busy.set(false);
     };
     const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;

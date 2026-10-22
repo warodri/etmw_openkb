@@ -24,6 +24,20 @@ def transform(raw, recipe):
     if recipe in ("ia", "plain"): return _norm(raw)
     return None
 
+MIN_READABLE = 800   # a page with less readable text than this is treated as empty (JavaScript-only shell, login wall)
+_TAG = re.compile(r"\[\s*(source|sources|system|assistant|user|context)\b[^\]\n]{0,120}\]", re.I)
+_URL = re.compile(r"(?i)\b(?:https?://|www\.)[^\s)>\]\"']+")
+
+def readable(text): return len((text or "").strip()) >= MIN_READABLE
+
+def sanitize(text):
+    """Page text is data. Remove lookalikes of the source tags we put in the reader prompt, so a page cannot pose as another source."""
+    return _TAG.sub("(tag removed)", text or "")
+
+def clean_answer(ans):
+    """The reader may not send people to links. Only the entry's own source link (shown by the app, not by the reader) is allowed."""
+    return _URL.sub("(link removed)", ans or "")
+
 READING = [0]   # how many source pages are being read right now (the app shows "Reading the source")
 
 def _fetch_raw(url):
@@ -73,7 +87,7 @@ def hydrate(hits, db_path=None, fetch=_fetch_raw):
             dropped += 1
             if t: _log_changed(c, did)
             continue
-        out.append((score, dict(ch, text=piece)))
+        out.append((score, dict(ch, text=sanitize(piece))))
     c.close(); return out, dropped
 
 def _log_changed(c, did):

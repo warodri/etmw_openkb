@@ -15,6 +15,7 @@ export interface ChatMessage {
   sources?: string[];
   source_ids?: string[];
   licences?: string[];
+  source_urls?: string[];
   not_found?: boolean;
   ts?: string;
 }
@@ -34,6 +35,7 @@ export interface AskResponse {
   sources: string[];
   source_ids?: string[];
   licences?: string[];
+  source_urls?: string[];
   not_found: boolean;
 }
 

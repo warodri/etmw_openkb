@@ -22,8 +22,11 @@ def get(url, limit=3_000_000, delay=None):
     _site = "archive.org" if str(h).endswith("archive.org") else h
     if h not in _robots:
         rp = urllib.robotparser.RobotFileParser(); rp.set_url(f"https://{h}/robots.txt")
-        try: rp.read()
-        except Exception: pass
+        try: rp.parse(urllib.request.urlopen(urllib.request.Request(f"https://{h}/robots.txt", headers={"User-Agent": UA}), timeout=5).read(500_000).decode("utf-8", "replace").splitlines())
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403): rp.disallow_all = True   # standard: access denied to robots.txt means stay out
+            else: rp.allow_all = True                           # no robots.txt
+        except Exception: rp.allow_all = True                   # unreachable: the page fetch fails on its own, quickly
         _robots[h] = rp
     if not _robots[h].can_fetch(UA, url): raise ValueError("robots.txt disallows " + url)
     wait = (DELAY if delay is None else delay) - (time.time() - _last[0])
