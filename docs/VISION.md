@@ -51,11 +51,17 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:
 - Retrieval test: 19/20 answers and 5/5 refusals, same as before. Q10 stays as is.
 
 ## 9. OPEN / UNDECIDED
-1. Pointer-mode research tests 1 and 2: DONE 22 Oct 13:45, see docs/POINTER-MODE-RESULTS.md (catalogue F1 0.96; quick read 16/20 correct, all misses were refusals, 13-15 s). Tests 3 to 6 not approved.
-2. Pointer-mode build: not approved.
+1. Pointer-mode research tests 1 and 2: DONE 22 Oct 13:45, see docs/POINTER-MODE-RESULTS.md (catalogue F1 0.96; quick read 16/20 correct, all misses were refusals, 13-15 s). Tests 3 to 6 DONE 22 Oct (approved 13:50), hardening built and pushed 14:22, see the same file.
+2. Pointer-mode build: not approved. Second-source cross-check (reader compares sources and flags a page that contradicts the others): DECIDED 22 Oct 14:25, being built.
 3. A lawyer reads docs/CONTENT-LICENSE.md (share-alike interplay) before the paid tier or public launch.
 4. Reference-only build and the purge of stored text (section 8).
 
 ## 10. Prior art
 - II-Commons, HIVE, Context7 and Common Corpus are inputs and neighbours. The architecture (small reader plus retrieval over a shared index) is not new.
 - The opening: simplicity and trust for ordinary local-AI users. One install, an open library, clear licences, answers that cite.
+
+## 11. Vision, NOT BUILT: a fact-checker and an open library in one (stated by Walter, 22 Oct 14:25)
+- VISION, not built, not designed yet. Walter says more is coming; wait for his next message before designing anything.
+- The system agreed at the start is a mix of two things made for this cause: a Twitter-style fact-checker (community notes: who stands behind a claim, and how contested it is) and a Wikipedia-like open library.
+- What this means for today's build, only as a reading of the idea and not a plan: the library already answers with its sources and licences; the second-source cross-check (section 9) is a first small step towards "how contested is a claim".
+- Open questions for Walter, to ask only when he sends the rest: who may stand behind a claim (named people, accounts, organisations), how "contested" is shown, whether the library keeps claims as entries or only links to sources.
