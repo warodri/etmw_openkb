@@ -102,3 +102,6 @@ Emails go out through Instinct's Agent Mail, not the OpenKB SMTP. The OpenKB sid
 
 ## First collector (built)
 app/collector.py: Project Gutenberg only (allow-list), robots.txt checked, 5 s between requests, per-run byte cap, short works only at first. Rule check (page says public domain in the USA) AND local model reading the rights text (yes/no/unclear, unclear is not published), then the library checks. Dry run by default; `--publish` to publish.
+
+### Collector schedule and load monitor
+Daily at 03:30 on the Mac Mini (launchd job com.openkb.collector): `app/collector_run.py --n 25 --publish --model-check`. Each run appends one JSON line to data/collector_runs.jsonl (not in git): docs published, bytes, seconds, failures by reason, CPU, free memory, ollama memory, embedding latency, and the demo's answer time before and after. The candidate list comes from the Project Gutenberg catalogue feed (English text, non-fiction subjects first filter). First run (10:23, 25 docs, 1.57 MB, 24 min): see the report to Walter; answers stayed correct and the machine stayed mostly idle.

@@ -11,8 +11,8 @@ import library as L
 ALLOW = {"www.gutenberg.org"}          # allow-list: a host not here is never fetched
 UA = "OpenKB-collector/0.1 (+https://github.com/warodri/etmw_openkb; public-domain text only)"
 DELAY = 5.0                            # seconds between requests
-MAX_DOC_BYTES = 150_000                # first runs: short works only
-RUN_BYTES = 600_000                    # daily byte cap per run
+MAX_DOC_BYTES = 300_000
+RUN_BYTES = 4_000_000
 OLLAMA, READER = "http://127.0.0.1:11436", "qwen3.6:35b-a3b"
 _last = [0.0]; _robots = {}
 
