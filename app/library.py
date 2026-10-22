@@ -264,7 +264,12 @@ def report(doc_id, reason, details="", email="", reporter="anon", claimant="", e
             strong = ov >= 0.5 and notice and not permissive and dom_ev != dom_doc and doc["origin"] != "collector"
             note = f"overlap {ov:.2f}, notice={notice}, permissive licence on page={permissive}"
         cd, ed = contact.split("@")[1].lower(), (urllib.parse.urlparse(evidence_url).hostname or "").lower()
-        note += "; contact domain " + ("matches" if ed == cd or ed.endswith("." + cd) or cd.endswith("." + ed) else "differs from") + " the evidence site"
+        # the named contact must be tied to the evidence: its email or domain appears on the page, or the page lives on that domain
+        low = (page or "").lower()
+        tied = page is not None and (contact.lower() in low or cd in low or ed == cd or ed.endswith("." + cd))
+        if not tied:
+            return finish("queued", f"holder contact is not tied to the evidence page ({note}); no email sent", "Received. We could not tie the contact you gave to your link, so a person will look. We have not emailed anyone.", hide=False)
+        note += "; contact tied to the evidence page"
         res = finish("awaiting-source", note, "Thank you. We are asking the rights holder you named to confirm. Nothing is removed unless they confirm. " + ("The document is hidden until they answer, for up to 7 days." if strong else "The document stays up while we wait, for up to 7 days."), hide=strong)
         c2 = connect(db_path)
         c2.execute("INSERT INTO verifications (id, report_id, doc_id, to_email, holder, token, status, created_at) VALUES (?,?,?,?,?,?,?,?)",
@@ -352,6 +357,22 @@ def send_approved(sender, base_url, db_path=None):
             log(c, "verification-sent", v["doc_id"], "system", v["id"]); sent += 1
     c.commit(); c.close(); return sent
 
+def mark_sent(vid, actor="mail-task", db_path=None):
+    """Record that an APPROVED verification was sent (by the mail route outside this repo). Starts the 7-day clock."""
+    c = connect(db_path)
+    n = c.execute("UPDATE verifications SET status='sent', sent_at=?, expires_at=? WHERE id=? AND status='approved'", (now(), datetime.fromtimestamp(time.time() + VERIFY_DAYS * 86400, timezone.utc).isoformat(), vid)).rowcount
+    if n: log(c, "verification-sent", None, actor, vid)
+    c.commit(); c.close(); return bool(n)
+
+def outbox_json(base_url="https://openkb--warodri.entertomyworld.com", status=("draft", "approved"), db_path=None):
+    """Machine-readable drafts: [{id, report_id, status, to, subject, body, doc_title}]"""
+    out = []
+    for v in outbox(db_path):
+        if v["status"] not in status: continue
+        subj, body = verification_mail(v, v["title"], base_url)
+        out.append({"id": v["id"], "report_id": v["report_id"], "status": v["status"], "to": v["to_email"], "subject": subj, "body": body, "doc_title": v["title"]})
+    return out
+
 def get_verification(token, db_path=None):
     c = connect(db_path); v = c.execute("SELECT v.*, d.title FROM verifications v LEFT JOIN documents d ON d.id=v.doc_id WHERE v.token=?", (token or "",)).fetchone(); c.close()
     return dict(v) if v else None
@@ -406,6 +427,8 @@ if __name__ == "__main__":
         for r in open_reports(): print(r["id"], r["doc_id"], r["reason"], r["doc_status"], (r["title"] or ""), "|", r["details"][:120])
     elif a[:2] == ["decide"] and len(a) == 3 + 0 or (a[:1] == ["decide"] and len(a) == 3): print(decide_report(a[1], a[2], "maintainer-cli"))
     elif a[:1] == ["remove"] and len(a) >= 2: print(takedown(a[1], "maintainer-cli", " ".join(a[2:]) or "removed by maintainer", hard=True))
+    elif a[:1] == ["outbox-json"]: print(json.dumps(outbox_json(), indent=1))
+    elif a[:1] == ["mark-sent"] and len(a) == 2: print(mark_sent(a[1]))
     elif a[:1] == ["outbox"]:
         for v in outbox(): print(v["id"], v["status"], v["to_email"], v["holder"], v["doc_id"], v["title"])
     elif a[:1] == ["approve"] and len(a) == 2: print(approve_outbox(a[1]))
