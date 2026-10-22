@@ -19,6 +19,7 @@ _last = [0.0]; _robots = {}
 def get(url, limit=3_000_000):
     h = urllib.parse.urlparse(url).hostname
     if h not in ALLOW: raise ValueError("host not on the allow-list: " + str(h))
+    _site = "archive.org" if str(h).endswith("archive.org") else h
     if h not in _robots:
         rp = urllib.robotparser.RobotFileParser(); rp.set_url(f"https://{h}/robots.txt")
         try: rp.read()
@@ -28,7 +29,12 @@ def get(url, limit=3_000_000):
     wait = DELAY - (time.time() - _last[0])
     if wait > 0: time.sleep(wait)
     _last[0] = time.time()
-    return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=30).read(limit).decode("utf-8", "replace")
+    class _R(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            nh = urllib.parse.urlparse(newurl).hostname or ""
+            if not (nh in ALLOW or nh.endswith(".archive.org") and "archive.org" in ALLOW): raise ValueError("redirect to a host not on the allow-list: " + nh)
+            return super().redirect_request(req, fp, code, msg, headers, newurl)
+    return urllib.request.build_opener(_R).open(urllib.request.Request(url, headers={"User-Agent": UA}), timeout=30).read(limit).decode("utf-8", "replace")
 
 def rights_snippet(page):
     t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style).*?</\1>", " ", page)))

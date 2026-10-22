@@ -3,6 +3,7 @@ State: data/collector_state.json (ids already tried). Log: data/collector_runs.j
 import sys, os, re, io, csv, json, time, subprocess, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import collector as C, library as L
+import collector_ia as IA
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 DATA = os.path.join(ROOT, "data"); os.makedirs(DATA, exist_ok=True)
 STATE, RUNS = os.path.join(DATA, "collector_state.json"), os.path.join(DATA, "collector_runs.jsonl")
@@ -39,24 +40,25 @@ def catalog():
             yield int(r["Text#"]), r.get("Title", "")
 
 def main():
-    a = sys.argv[1:]; n = int(a[a.index("--n") + 1]) if "--n" in a else 25
+    a = sys.argv[1:]; source = a[a.index("--source") + 1] if "--source" in a else "gutenberg"; n = int(a[a.index("--n") + 1]) if "--n" in a else 25
     publish, mc = "--publish" in a, "--model-check" in a
     st = json.load(open(STATE)) if os.path.exists(STATE) else {"tried": []}
-    tried = set(st["tried"]); run = {"start": time.strftime("%Y-%m-%dT%H:%M:%S"), "before": snapshot(), "ask_before_s": ask_time(), "embed_before_s": embed_latency(), "docs": [], "fail": {}}
+    key = "tried" if source == "gutenberg" else "tried_" + source; collect_fn = C.collect if source == "gutenberg" else IA.collect
+    tried = set(st.get(key, []));  run = {"source": source, "start": time.strftime("%Y-%m-%dT%H:%M:%S"), "before": snapshot(), "ask_before_s": ask_time(), "embed_before_s": embed_latency(), "docs": [], "fail": {}}
     t0 = time.time(); spent = 0; todo = []
-    for i, title in catalog():
+    for i, title in (catalog() if source == "gutenberg" else IA.catalog()):
         if i not in tried: todo.append(i)
         if len(todo) >= n * 6: break          # candidate pool; many are skipped for size
     pub = 0; probes = []
     for i in todo:
         if pub >= n or spent >= C.RUN_BYTES: break
-        r = C.collect(i, publish, mc, spent); tried.add(i); spent += r["bytes"] if r["ok"] else 0
+        r = collect_fn(i, publish, mc, spent); tried.add(i); spent += r["bytes"] if r["ok"] else 0
         if r["ok"]: pub += 1; run["docs"].append({"id": i, "title": r.get("title"), "bytes": r["bytes"]})
         else: k = re.sub(r"[\d(].*", "", r["why"])[:50].strip(); run["fail"][k] = run["fail"].get(k, 0) + 1
         if pub and pub % 8 == 0 and len(probes) < pub // 8: probes.append({"after_docs": pub, "embed_s": embed_latency(), **snapshot()})
     run["during"] = probes; run["seconds"] = round(time.time() - t0); run["published"] = pub if publish else 0
     run["dry_run_passes"] = 0 if publish else pub; run["bytes"] = spent; run["candidates_tried"] = len(todo)
     run["after"] = snapshot(); run["ask_after_s"] = ask_time(); run["embed_after_s"] = embed_latency(); run["live_docs"] = L.stats()["documents"]
-    st["tried"] = sorted(tried); json.dump(st, open(STATE, "w"))
+    st[key] = sorted(tried, key=str); json.dump(st, open(STATE, "w"))
     open(RUNS, "a").write(json.dumps(run) + "\n"); print(json.dumps(run, indent=1))
 if __name__ == "__main__": main()
