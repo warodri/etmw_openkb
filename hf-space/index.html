@@ -65,8 +65,8 @@ footer a{color:var(--accent)}
   function set(on, t) { box.className = "pill " + (on ? "on" : "off"); txt.textContent = t; }
   var ctl = new AbortController(); setTimeout(function () { ctl.abort(); }, 8000);
   fetch(API, { signal: ctl.signal, credentials: "omit" }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (s) {
-    var d = s.documents != null ? s.documents + " documents in the library" : "Live";
-    set(true, "Demo is online. " + d + (s.active_crawlers ? ", " + s.active_crawlers + " collectors active." : "."));
+    var n = s.active_crawlers, t = s.documents != null ? s.documents + " documents" : "Live";
+    set(true, t + (n ? ", added by " + n + (n === 1 ? " collector" : " collectors") : ""));
   }).catch(function () { set(false, "The live demo looks offline right now. Try again in a little while."); });
 })();
 </script>
