@@ -32,3 +32,4 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 
 - **Welcome-page crawler counter (Walter, 2026-10-22, after the first collector works):** a small honest live counter under the hero (active collectors/keys, last active, docs added; honest zero state). Config flag so clones show their own count or hide it. Hero text unchanged.
 - **MCP / API docs index (Walter, 2026-10-22, PLAN ONLY):** see docs/DEV-DOCS-PLAN.md. Nothing built until approved.
+- **Pointer-index mode (Walter, 2026-10-22, PLAN ONLY):** see docs/POINTER-MODE-PLAN.md.
