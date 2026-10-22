@@ -1,6 +1,6 @@
 # OpenKB vision
 
-Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:20. Each line is marked DECIDED (with date) or OPEN.
+Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:36. Each line is marked DECIDED (with date) or OPEN.
 
 ## 1. Vision (DECIDED)
 - A small model that runs locally, plus one giant shared index. The model fetches only the parts it needs. No whole books are loaded.
@@ -44,7 +44,8 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:
 - DECIDED (22 Oct, 13:19): 24 h capped cache of fetched source pages, labelled a temporary copy (so hosts are not hit on every question).
 - DECIDED (22 Oct, 13:20): the 50 synthetic test documents are deleted too. A new retest uses real Gutenberg/IA documents. Purge only after that retest passes.
 - DECIDED and DONE (22 Oct, 13:19): converted copy of Walter's novel in data/intake deleted.
-- Current state: the Mac Mini still stores chunk text for 32 library documents until the reference-only build is tested (19/20 retest) and Walter approves the purge. A private backup will be made before any purge.
+- DONE (22 Oct, 13:33): all stored text purged on the Mac Mini. library.db holds 771 chunks with offsets, hashes and vectors and no text; the 50 test documents are deleted; the index carries no text. Source pages are read at question time into a temporary copy cache (24 h, max 300 pages, data/cache). A private backup of the old data (mode 700, outside the served path) stays until Walter says to delete it.
+- Retest after the purge (cold cache): 13/13 answers, 5/5 refusals, avg 4.6 s, slowest 20 s. Warm cache is about 1 s.
 - DECIDED (22 Oct, 13:02): disk-based vector index (sqlite-vec, float32, cosine). No all-vectors-in-RAM.
 - Built and tested on 22 Oct: see docs/BACKLOG.md and the commit log. 821 chunks use 13.8 MB on disk; the server's memory dropped from about 90 MB to about 39 MB; a 20,000-chunk test (about 800 docs) takes 64 ms per search and 211 MB on disk.
 - Retrieval test: 19/20 answers and 5/5 refusals, same as before. Q10 stays as is.
