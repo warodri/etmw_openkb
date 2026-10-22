@@ -3,7 +3,7 @@ An agent sends page addresses with its key; each goes through app/intake.py. Key
 import hashlib, secrets, time, json, collections, threading
 import library as L, intake as I
 
-TERMS_VERSION = "draft-1"   # the terms text is a proposal until Walter approves it (docs/CRAWLER-TERMS-DRAFT.md)
+TERMS_VERSION = "draft-1"   # the terms text is a proposal until Walter approves it (private draft)
 MAX_KEYS = 3
 RATE_PER_MIN = 6            # submissions per key per minute (each costs one polite fetch and a few embeddings)
 _recent, _rl = collections.defaultdict(collections.deque), threading.Lock()

@@ -12,7 +12,7 @@ Known limits: a copyright line like "(c) 2026 Someone" is not treated as a licen
 
 ## Step 2: accounts, keys and the submission API - built 22 Oct 2026
 `app/crawlkeys.py` + endpoints in the live server. Nothing is public: only the owner and testers (the same list as donations) can make an account or key; the submit endpoint answers only a valid key.
-- Account: mandatory default licence (must be accepted by the library; NC/ND/all rights reserved refused) plus acceptance of the terms (`TERMS_VERSION`, text in docs/CRAWLER-TERMS-DRAFT.md). Logged as `crawler-default-set`.
+- Account: mandatory default licence (must be accepted by the library; NC/ND/all rights reserved refused) plus acceptance of the terms (`TERMS_VERSION`, text kept as a private draft until approved). Logged as `crawler-default-set`.
 - Keys: up to 3 active per account, `okc_` + 48 hex characters, shown once, only a hash is stored. Created and revoked events are logged.
 - Submit: `POST /api/crawl/submit` with header `Authorization: Bearer okc_...` and body `{"url": "https://..."}`. Answer `{ok, doc_id, licence, basis, title, reasons}`; status 200 published, 422 refused (with reasons), 401 bad key, 429 more than 6 a minute per key, 503 busy. One submission is processed at a time; on success the index is reloaded.
 - Account endpoints (signed-in testers): `GET /api/crawl/account`, `POST /api/crawl/account {default_licence, accept_terms}`, `POST /api/crawl/keys {label}`, `POST /api/crawl/keys/revoke {id}`.
