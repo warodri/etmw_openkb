@@ -95,7 +95,9 @@ def ingest(url, contributor, default_licence="", declarations=None, embed=None, 
         out["reasons"].append(why); L.log(c, "rejected", None, contributor, json.dumps({"url": url, "origin": "user-crawler", "reasons": out["reasons"]})); c.commit(); c.close(); return out
     url = (url or "").strip()
     if not re.match(r"^https?://", url): return refuse("not a web address")
-    if c.execute("SELECT 1 FROM documents WHERE source_url=? AND status IN ('live','hidden')", (url,)).fetchone(): return refuse("this page is already in the library")
+    row = c.execute("SELECT status FROM documents WHERE source_url=? AND status IN ('live','hidden','removed') ORDER BY status='removed' DESC", (url,)).fetchone()
+    if row and row[0] == "removed": return refuse("this page was removed from the library after a report and cannot be added again")
+    if row: return refuse("this page is already in the library")
     try: raw, final, ct = fetch_url(url, delay=delay)
     except Refused as e: return refuse(str(e))
     if re.search(r"<meta[^>]+name=[\"']robots[\"'][^>]*content=[\"'][^\"']*(noindex|noai|none)", raw, re.I): return refuse("the page asks not to be indexed")

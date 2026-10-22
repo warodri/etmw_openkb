@@ -5,6 +5,7 @@ import { HowComponent } from './how.component';
 import { DonateComponent } from './donate.component';
 import { AgentComponent } from './agent.component';
 import { ReportComponent } from './report.component';
+import { CrawlComponent } from './crawl.component';
 
 export const routes: Routes = [
   { path: '', component: ChatComponent, pathMatch: 'full' },
@@ -13,4 +14,5 @@ export const routes: Routes = [
   { path: 'donate', component: DonateComponent },
   { path: 'agent', component: AgentComponent },
   { path: 'report', component: ReportComponent },
+  { path: 'crawl', component: CrawlComponent },
 ];

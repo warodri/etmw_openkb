@@ -30,6 +30,9 @@ export interface TaskDetail {
   messages: ChatMessage[];
 }
 
+export interface CrawlKey { id: string; label: string; created_at: string; revoked_at: string | null; last_used: string | null; submissions: number; }
+export interface CrawlAccount { has_account: boolean; default_licence: string; terms_version: string; keys: CrawlKey[]; allowed: boolean; }
+
 export interface AskResponse {
   answer: string;
   sources: string[];
@@ -75,6 +78,10 @@ export class ApiService {
     });
   }
 
+  crawlAccount() { return this.http.get<CrawlAccount>('/api/crawl/account'); }
+  crawlSetAccount(default_licence: string, accept_terms: boolean) { return this.http.post<{ ok: boolean }>('/api/crawl/account', { default_licence, accept_terms }); }
+  crawlCreateKey(label: string) { return this.http.post<{ ok: boolean; key?: string }>('/api/crawl/keys', { label }); }
+  crawlRevoke(id: string) { return this.http.post<{ ok: boolean }>('/api/crawl/keys/revoke', { id }); }
   canUpload() { return this.http.get<{ open: boolean }>('/api/library/can-upload'); }
   convertFile(file: File) {
     return from(file.arrayBuffer()).pipe(

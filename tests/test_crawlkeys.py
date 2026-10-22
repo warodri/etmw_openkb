@@ -55,4 +55,20 @@ ok(n >= 1, "rate limit: more than %d submissions a minute get 429" % K.RATE_PER_
 ok(K.revoke_key("o1", k1["id"])["ok"], "key revoked"); ok(K.submit(k1["key"], B + "/cc", embed=fake, delay=0)["status"] == 401, "revoked key gets 401")
 ok(not K.revoke_key("o2", k1["id"])["ok"], "another account cannot revoke it")
 ev = [r[0] for r in c.execute("SELECT event FROM audit_log").fetchall()]; ok("crawler-default-set" in ev and "crawler-key-created" in ev and "crawler-key-revoked" in ev, "account events are in the audit log")
+# ---- removal flow for a page a user crawler added (no email is ever sent in this test) ----
+k2 = K.create_key("o2x", "x") if False else None
+K.set_account("o3", "CC0", True); k3 = K.create_key("o3", "agent3")["key"]
+r = K.submit(k3, B + "/js2", embed=fake, delay=0) if False else None
+P["/bbc"] = page("bbc", text=body("bbc")); r = K.submit(k3, B + "/bbc", embed=fake, delay=0); ok(r["ok"] and r["basis"] == "user-declared", "page with no open licence accepted on the crawler default (user-declared)")
+did = r["doc_id"]; txt = L._doc_text(L.connect(), did); ok(len(txt) > 800, "document text is readable from the source for the report check")
+ev = lambda u: "<html>" + txt + " (c) 2026 BBC. All rights reserved. contact legal@bbc.example</html>"
+rep = L.report(did, "copyright", "this is ours", email="", reporter="r1", claimant="BBC", evidence_url="https://bbc.example/orig", statement=True, holder_contact="legal@bbc.example", fetch=ev)
+ok(rep and rep["outcome"] == "awaiting-source" and rep["hidden"], "copyright report from a named holder: entry hidden, holder is asked (draft only, nothing sent)")
+c = L.connect(); ok(c.execute("SELECT status FROM documents WHERE id=?", (did,)).fetchone()[0] == "hidden", "entry is hidden at once")
+v = L.outbox()[0]; ok(v["status"] == "draft", "verification email is only a draft")
+L.approve_outbox(v["id"]); L.mark_sent(v["id"])   # test only: marks it as sent without sending anything
+ok(L.answer_verification(v["token"], "yes"), "rights holder confirms")
+ok(c.execute("SELECT status FROM documents WHERE id=?", (did,)).fetchone()[0] == "removed", "entry removed after confirmation")
+ok(did not in L.live_doc_loaders(), "removed entry is not served any more")
+r = K.submit(k3, B + "/bbc", embed=fake, delay=0); ok(not r["ok"], "the removed text cannot come back as a duplicate-free resubmission")
 print("crawl key tests done")

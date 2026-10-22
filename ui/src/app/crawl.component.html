@@ -1,0 +1,59 @@
+<div class="app-min-h bg-white text-neutral-800 dark:bg-[#212121] dark:text-neutral-200 font-sans">
+  <header class="flex items-center gap-2 px-3 md:px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 bg-white dark:bg-[#212121] z-10">
+    <a routerLink="/agent" class="w-11 h-11 -ml-2 shrink-0 flex items-center justify-center rounded-lg text-xl no-underline text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Back">←</a>
+    <span class="flex-1 text-[15px] font-semibold truncate">Crawl agents</span>
+    <button class="px-3 py-1.5 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] cursor-pointer bg-transparent" [attr.aria-label]="theme.dark() ? 'Switch to light mode' : 'Switch to dark mode'" (click)="theme.toggle()">{{ theme.dark() ? 'Light' : 'Dark' }}</button>
+  </header>
+  <main class="max-w-2xl mx-auto px-4 md:px-6 pb-16 leading-relaxed text-[15px]">
+    <h1 class="mt-8 mb-2 text-2xl font-semibold text-neutral-800 dark:text-neutral-100">Crawl agents</h1>
+    <p class="mt-0 text-neutral-500 dark:text-neutral-400">Let your own agent add open web pages to the library. It sends a page address; OpenKB checks it and keeps a reference, not a copy.</p>
+
+    @if (state() === 'loading') { <p class="text-neutral-500">Loading…</p> }
+    @if (state() === 'signin') { <p class="mt-6">Sign in on the <a routerLink="/" class="underline">main page</a> first, then come back here.</p> }
+    @if (state() === 'closed') { <p class="mt-6 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4">Crawl agents open soon.</p> }
+
+    @if (state() === 'ready') {
+      <h2 class="text-lg font-semibold mt-8 mb-2">1. Your default licence</h2>
+      <p class="mt-0 text-[14px] text-neutral-500 dark:text-neutral-400">Required. It applies only to pages that state no licence of their own. If a page states a licence, that one always wins, and a page that says NonCommercial, NoDerivatives or all rights reserved is refused. Entries that rest on your default are marked "(user-declared)" and are answered in paraphrase, never quoted.</p>
+      <div class="flex flex-wrap items-center gap-3 mt-3">
+        <select class="min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#2a2a2a] text-[14px]" [value]="licence()" (change)="licence.set($any($event.target).value)" aria-label="Default licence">
+          @for (l of licences; track l) { <option [value]="l" [selected]="l === licence()">{{ l }}</option> }
+        </select>
+        <label class="flex items-start gap-2 text-[14px]"><input type="checkbox" class="mt-1 w-4 h-4" [checked]="terms()" (change)="terms.set($any($event.target).checked)"> <span>I may send these pages and I accept the crawler terms <b>(draft, version {{ acct()?.terms_version }})</b>: only public pages, I stand behind the licence I picked, entries can be removed when a rights holder asks, and my account is on record.</span></label>
+      </div>
+      <button class="mt-3 px-4 min-h-[44px] rounded-lg bg-neutral-800 dark:bg-neutral-100 text-white dark:text-neutral-900 text-[14px] cursor-pointer border-0 disabled:opacity-50" [disabled]="!terms()" (click)="save()">{{ acct()?.has_account ? 'Update default licence' : 'Save and continue' }}</button>
+      @if (acct()?.has_account) { <span class="ml-3 text-[13px] text-neutral-500">Current: {{ acct()?.default_licence }}</span> }
+
+      @if (acct()?.has_account) {
+        <h2 class="text-lg font-semibold mt-10 mb-2">2. Keys</h2>
+        <p class="mt-0 text-[14px] text-neutral-500 dark:text-neutral-400">Up to 3 active keys. A key is shown once when you make it; only a fingerprint is stored. Limit: 6 pages a minute per key.</p>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <input class="min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-[#2a2a2a] text-[14px] flex-1 min-w-[10rem]" placeholder="Label, for example my laptop agent" maxlength="60" [value]="label()" (input)="label.set($any($event.target).value)" aria-label="Key label">
+          <button class="px-4 min-h-[44px] rounded-lg bg-neutral-800 dark:bg-neutral-100 text-white dark:text-neutral-900 text-[14px] cursor-pointer border-0 disabled:opacity-50" [disabled]="activeKeys() >= 3" (click)="create()">Make a key</button>
+        </div>
+        @if (newKey()) {
+          <div class="mt-3 rounded-xl border border-amber-400 bg-amber-50 dark:bg-amber-950/30 p-3 text-[13.5px]">
+            <b>Copy this key now. It will not be shown again.</b>
+            <div class="mt-2 flex items-center gap-2"><code class="font-mono text-[12.5px] break-all flex-1">{{ newKey() }}</code><button class="px-3 min-h-[44px] rounded-lg border border-neutral-400 bg-transparent cursor-pointer text-[13px]" (click)="copy()">{{ copied() ? 'Copied' : 'Copy' }}</button></div>
+          </div>
+        }
+        <div class="mt-4 rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 text-[14px]">
+          @for (k of acct()?.keys || []; track k.id) {
+            <div class="p-3 flex items-center gap-3">
+              <div class="flex-1 min-w-0"><div class="font-medium truncate">{{ k.label || k.id }} @if (k.revoked_at) { <span class="text-neutral-500 font-normal">(revoked)</span> }</div>
+                <div class="text-[12.5px] text-neutral-500">Made {{ when(k.created_at) }} · last used {{ when(k.last_used) }} · {{ k.submissions }} pages sent</div></div>
+              @if (!k.revoked_at) { <button class="px-3 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent cursor-pointer text-[13px]" (click)="revoke(k.id)">Revoke</button> }
+            </div>
+          } @empty { <div class="p-3 text-neutral-500">No keys yet.</div> }
+        </div>
+
+        <h2 class="text-lg font-semibold mt-10 mb-2">3. Send a page</h2>
+        <pre class="mt-2 p-3 rounded-xl bg-neutral-100 dark:bg-neutral-900 text-[12.5px] overflow-x-auto font-mono">curl -X POST https://openkb--warodri.entertomyworld.com/api/crawl/submit \
+  -H "Authorization: Bearer YOUR_KEY" \
+  -d '&#123;"url": "https://example.org/page"&#125;'</pre>
+        <p class="text-[14px] text-neutral-500 dark:text-neutral-400">The answer says if the page was added and under which licence, or why it was refused (robots.txt, no readable text, a licence we do not accept, a duplicate, a removed page).</p>
+      }
+      @if (msg()) { <p class="mt-4 text-[14px]" role="status">{{ msg() }}</p> }
+    }
+  </main>
+</div>

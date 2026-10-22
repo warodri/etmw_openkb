@@ -133,8 +133,8 @@ def _submit(c, text, title, origin, licence, source_url="", credit="", contribut
     text = (text or "").strip()
     reasons += check_text(text)
     h, hh = _hash(text), _hash(text[:2000])
-    if c.execute("SELECT 1 FROM documents WHERE status IN ('live','hidden') AND (hash=? OR head_hash=?)", (h, hh)).fetchone():
-        reasons.append("duplicate of a document already in the library")
+    if c.execute("SELECT 1 FROM documents WHERE status IN ('live','hidden','removed') AND (hash=? OR head_hash=?)", (h, hh)).fetchone():
+        reasons.append("duplicate of a document already in the library (or removed from it after a report)")
     if contributor and origin != "collector":
         since = datetime.fromtimestamp(time.time() - 86400, timezone.utc).isoformat()
         if c.execute("SELECT count(*) FROM documents WHERE contributor=? AND created_at>?", (contributor, since)).fetchone()[0] >= PER_USER_DAILY_DOCS:
