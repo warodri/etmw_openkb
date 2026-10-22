@@ -26,7 +26,7 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:
 
 ## 5. Copyright reports
 - DECIDED: a report needs the rights holder and a contact. We email that named holder (Walter approves each outgoing email).
-- 24 hours: the document is hidden while the report is open. 7 days with no answer: the document stays. A confirmed holder removes it.
+- The document stays visible while a copyright report is open. 7 days with no answer: the document stays. A confirmed holder removes it.
 - A weekly sample of 20 documents is reviewed. A human acts only on unclear cases (target 24 h).
 
 ## 6. Collectors

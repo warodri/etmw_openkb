@@ -63,8 +63,8 @@ P["/bbc"] = page("bbc", text=body("bbc")); r = K.submit(k3, B + "/bbc", embed=fa
 did = r["doc_id"]; txt = L._doc_text(L.connect(), did); ok(len(txt) > 800, "document text is readable from the source for the report check")
 ev = lambda u: "<html>" + txt + " (c) 2026 BBC. All rights reserved. contact legal@bbc.example</html>"
 rep = L.report(did, "copyright", "this is ours", email="", reporter="r1", claimant="BBC", evidence_url="https://bbc.example/orig", statement=True, holder_contact="legal@bbc.example", fetch=ev)
-ok(rep and rep["outcome"] == "awaiting-source" and rep["hidden"], "copyright report from a named holder: entry hidden, holder is asked (draft only, nothing sent)")
-c = L.connect(); ok(c.execute("SELECT status FROM documents WHERE id=?", (did,)).fetchone()[0] == "hidden", "entry is hidden at once")
+ok(rep and rep["outcome"] == "awaiting-source" and not rep["hidden"], "copyright report from a named holder: entry stays visible, holder is asked (draft only, nothing sent)")
+c = L.connect(); ok(c.execute("SELECT status FROM documents WHERE id=?", (did,)).fetchone()[0] != "hidden", "entry stays visible while the holder is asked")
 v = L.outbox()[0]; ok(v["status"] == "draft", "verification email is only a draft")
 L.approve_outbox(v["id"]); L.mark_sent(v["id"])   # test only: marks it as sent without sending anything
 ok(L.answer_verification(v["token"], "yes"), "rights holder confirms")

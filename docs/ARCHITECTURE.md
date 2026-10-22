@@ -35,7 +35,7 @@ Contributors submit a reference (a URL or location), not the text. Crawl agents 
 OPEN: pages with no licence (proposal: a pointer-only entry, no text indexed) and the pointer-mode tests; see docs/POINTER-MODE-PLAN.md.
 
 ## Takedown (DECIDED)
-A copyright report needs the rights holder's name and contact. We ask that named holder (Walter approves each email). The document is hidden within 24 hours while the report is open; 7 days with no answer means it stays; a confirmed holder means removal. A weekly sample of 20 documents is checked; a person only handles unclear cases. Because the library holds references and vectors, not copies, takedown means dropping the entry and its vectors from the index.
+A copyright report needs the rights holder's name and contact. We ask that named holder (Walter approves each email). The document stays visible while the report is open (a report alone, even a strong match, hides nothing; repeated reports could otherwise hide content forever); 7 days with no answer means it stays; a confirmed holder means removal. A weekly sample of 20 documents is checked; a person only handles unclear cases. Because the library holds references and vectors, not copies, takedown means dropping the entry and its vectors from the index.
 
 ## Self-hosting with Janus (optional)
 A donor who keeps material on their own computer can serve it to the library through [Janus](https://entertomyworld.com/apps/janus/), which gives a local service a public URL. The library then indexes that URL like any other reference. Janus is optional and is an ETMW product, built by the same studio as this project's first reader.

@@ -321,7 +321,7 @@ def report(doc_id, reason, details="", email="", reporter="anon", claimant="", e
         if not tied:
             return finish("queued", f"holder contact is not tied to the evidence page ({note}); no email sent", "Received. We could not tie the contact you gave to your link, so a person will look. We have not emailed anyone.", hide=False)
         note += "; contact tied to the evidence page"
-        res = finish("awaiting-source", note, "Thank you. We are asking the rights holder you named to confirm. Nothing is removed unless they confirm. " + ("The document is hidden until they answer, for up to 7 days." if strong else "The document stays up while we wait, for up to 7 days."), hide=strong)
+        res = finish("awaiting-source", note, "Thank you. We are asking the rights holder you named to confirm. Nothing is removed unless they confirm. " + "The document stays up while we wait, for up to 7 days.", hide=False)
         c2 = connect(db_path)
         c2.execute("INSERT INTO verifications (id, report_id, doc_id, to_email, holder, token, status, created_at) VALUES (?,?,?,?,?,?,?,?)",
                    ("ver-" + uuid.uuid4().hex[:10], rid, doc_id, contact[:200], claimant[:200], uuid.uuid4().hex, "draft", now()))

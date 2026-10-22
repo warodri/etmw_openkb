@@ -61,7 +61,7 @@ v = [o for o in L.outbox(db) if o["report_id"] == x["id"]][0]; L.approve_outbox(
 c = L.connect(db); c.execute("UPDATE verifications SET expires_at='2000-01-01T00:00:00+00:00' WHERE id=?", (v["id"],)); c.commit(); c.close()
 ok(L.expire_verifications(db) == 1 and L.get_document(doc, db)["status"] == "live" and L.answer_verification(v["token"], "yes", db) is False, "no answer in time: report closed, NOTHING removed, late answer refused")
 x = L.report(doc, "copyright", "mine", reporter="r5", fetch=lambda u: page, **good)
-ok(x["outcome"] == "awaiting-source" and x["hidden"] and L.get_document(doc, db)["status"] == "hidden", "strong match + (c) notice: hidden (not removed) while the holder is asked")
+ok(x["outcome"] == "awaiting-source" and not x["hidden"] and L.get_document(doc, db)["status"] != "hidden", "strong match + (c) notice: stays visible while the holder is asked (Walter 19:54: no hiding before evidence is validated)")
 v = [o for o in L.outbox(db) if o["report_id"] == x["id"]][0]
 c = L.connect(db); c.execute("UPDATE verifications SET created_at='2000-01-01T00:00:00+00:00' WHERE id=?", (v["id"],)); c.commit(); c.close()
 ok(L.expire_verifications(db) == 1 and L.get_document(doc, db)["status"] == "live", "never approved/answered: hidden doc is restored")
