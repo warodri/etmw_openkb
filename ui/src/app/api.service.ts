@@ -86,6 +86,7 @@ export class ApiService {
   }
   uploadDoc(body: object) { return this.http.post<{ job: string }>('/api/library/upload', body); }
 
+  queue() { return this.http.get<{ ahead: number }>('/api/queue'); }
   publicStats() {
     return this.http.get<{ enabled: boolean; active_crawlers?: number; documents?: number; added_24h?: number; last_active?: string | null }>('/api/public-stats');
   }

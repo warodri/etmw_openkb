@@ -329,9 +329,18 @@ export class ChatComponent implements OnInit {
     this.ask(text, t.id);
   }
 
+  queueAhead = signal(0);
+  private pollQueue(): void {
+    this.queueAhead.set(0);
+    const t = setInterval(() => {
+      if (!this.waiting()) { clearInterval(t); this.queueAhead.set(0); return; }
+      this.api.queue().subscribe({ next: (r) => this.queueAhead.set(r.ahead || 0), error: () => {} });
+    }, 2500);
+  }
   private ask(text: string, taskId: string): void {
     this.busy.set(true);
     this.waiting.set(true);
+    this.pollQueue();
     this.input = '';
     setTimeout(() => this.resizeBox());
     this.atBottom = true; this.showJump.set(false); this.hasNew.set(false);
