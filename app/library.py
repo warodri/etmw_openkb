@@ -162,12 +162,13 @@ def report(doc_id, reason, details="", email="", db_path=None):
     """Public report. Copyright and personal-data reports hide the document at once (soft takedown)."""
     if reason not in REPORT_REASONS: return None
     c = connect(db_path)
-    if not c.execute("SELECT 1 FROM documents WHERE id=?", (doc_id,)).fetchone(): c.close(); return None
+    fixture = (doc_id or "").startswith("fixture:")  # test-corpus documents are not in the library table
+    if not fixture and not c.execute("SELECT 1 FROM documents WHERE id=?", (doc_id,)).fetchone(): c.close(); return None
     rid = "rep-" + uuid.uuid4().hex[:10]
     c.execute("INSERT INTO reports VALUES (?,?,?,?,?,?,?,NULL,NULL)", (rid, doc_id, reason, (details or "")[:2000], (email or "")[:200], "open", now()))
     log(c, "reported", doc_id, "public", json.dumps({"report": rid, "reason": reason}))
     c.commit(); c.close()
-    if reason in HIDE_AT_ONCE: takedown(doc_id, "auto:" + rid, f"hidden pending decision ({reason})", hard=False, db_path=db_path)
+    if reason in HIDE_AT_ONCE and not fixture: takedown(doc_id, "auto:" + rid, f"hidden pending decision ({reason})", hard=False, db_path=db_path)
     return rid
 
 def decide_report(rid, decision, actor, db_path=None):
@@ -181,8 +182,26 @@ def decide_report(rid, decision, actor, db_path=None):
     elif decision == "restore" or decision == "dismiss": restore(r["doc_id"], actor, f"report {rid} {decision}", db_path=db_path)
     return True
 
+def open_reports(db_path=None):
+    c = connect(db_path)
+    rows = [dict(r) for r in c.execute("SELECT r.*, d.title, d.status AS doc_status FROM reports r LEFT JOIN documents d ON d.id=r.doc_id WHERE r.status='open' ORDER BY r.created_at").fetchall()]
+    c.close(); return rows
+
 def stats(db_path=None):
     c = connect(db_path)
     out = {"documents": dict(c.execute("SELECT status, count(*) FROM documents GROUP BY status").fetchall()),
            "open_reports": c.execute("SELECT count(*) FROM reports WHERE status='open'").fetchone()[0]}
     c.close(); return out
+
+if __name__ == "__main__":
+    import sys
+    a = sys.argv[1:]
+    if a[:1] == ["stats"]: print(json.dumps(stats(), indent=1))
+    elif a[:1] == ["reports"]:
+        for r in open_reports(): print(r["id"], r["doc_id"], r["reason"], r["doc_status"], (r["title"] or ""), "|", r["details"][:120])
+    elif a[:2] == ["decide"] and len(a) == 3 + 0 or (a[:1] == ["decide"] and len(a) == 3): print(decide_report(a[1], a[2], "maintainer-cli"))
+    elif a[:1] == ["remove"] and len(a) >= 2: print(takedown(a[1], "maintainer-cli", " ".join(a[2:]) or "removed by maintainer", hard=True))
+    elif a[:1] == ["log"]:
+        c = connect()
+        for r in c.execute("SELECT ts, event, doc_id, actor, detail FROM audit_log ORDER BY id DESC LIMIT 30"): print(tuple(r))
+    else: print("usage: library.py stats | reports | decide <report-id> remove|restore|dismiss | remove <doc-id> [reason] | log")
