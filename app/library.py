@@ -140,6 +140,21 @@ def live_chunks(db_path=None):
     c.close()
     return [({"id": f"{r['id']}#{r['idx']}", "source": r["title"], "doc_id": r["id"], "text": r["text"]}, json.loads(r["vec"])) for r in rows]
 
+def live_doc_loaders(db_path=None):
+    """{doc_id: loader} for live documents. A loader returns [(chunk_dict, vector)] for that one document (read on demand)."""
+    c = connect(db_path); rows = c.execute("SELECT id, title FROM documents WHERE status='live'").fetchall(); c.close()
+    def mk(did, title):
+        def load():
+            cc = connect(db_path)
+            rs = cc.execute("SELECT idx, text, vec FROM chunks WHERE doc_id=? ORDER BY idx", (did,)).fetchall(); cc.close()
+            return [({"id": f"{did}#{r['idx']}", "source": title, "doc_id": did, "text": r["text"]}, json.loads(r["vec"])) for r in rs]
+        return load
+    return {r["id"]: mk(r["id"], r["title"]) for r in rows}
+
+def live_titles(db_path=None):
+    """[(doc_id, title)] for live documents."""
+    c = connect(db_path); rows = [(r["id"], r["title"]) for r in c.execute("SELECT id, title FROM documents WHERE status='live'")]; c.close(); return rows
+
 def get_document(doc_id, db_path=None):
     c = connect(db_path); r = c.execute("SELECT * FROM documents WHERE id=?", (doc_id,)).fetchone(); c.close()
     return dict(r) if r else None
