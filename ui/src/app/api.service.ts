@@ -13,6 +13,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   text: string;
   sources?: string[];
+  source_ids?: string[];
   not_found?: boolean;
   ts?: string;
 }
@@ -30,6 +31,7 @@ export interface TaskDetail {
 export interface AskResponse {
   answer: string;
   sources: string[];
+  source_ids?: string[];
   not_found: boolean;
 }
 
@@ -67,6 +69,10 @@ export class ApiService {
     return this.http.post<{ text: string }>('/api/transcribe', blob, {
       headers: { 'Content-Type': blob.type || 'application/octet-stream' },
     });
+  }
+
+  report(doc_id: string, reason: string, details: string, email: string) {
+    return this.http.post<{ id: string; hidden: boolean }>('/api/report', { doc_id, reason, details, email });
   }
 
   ask(q: string, taskId: string): Observable<AskResponse> {

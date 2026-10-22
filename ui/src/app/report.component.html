@@ -1,0 +1,54 @@
+<div class="app-min-h bg-white text-neutral-800 dark:bg-[#212121] dark:text-neutral-200 font-sans">
+  <header class="flex items-center gap-2 px-3 md:px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 bg-white dark:bg-[#212121] z-10">
+    <a routerLink="/" class="w-11 h-11 -ml-2 shrink-0 flex items-center justify-center rounded-lg text-xl no-underline text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="Back to the app">&larr;</a>
+    <span class="flex-1 text-[15px] font-semibold truncate">Report content</span>
+    <button class="px-3 py-1.5 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 text-[13px] cursor-pointer bg-transparent" [attr.aria-label]="theme.dark() ? 'Switch to light mode' : 'Switch to dark mode'" (click)="theme.toggle()">{{ theme.dark() ? '\u2600 Light' : '\u263e Dark' }}</button>
+  </header>
+  <main class="max-w-2xl mx-auto px-4 md:px-6 pb-16 leading-relaxed text-[15px]">
+    <h1 class="mt-8 mb-2 text-2xl md:text-3xl font-semibold">Something here should not be here? Tell us.</h1>
+    <p class="mt-0 text-neutral-500 dark:text-neutral-400">OpenKB publishes documents after automatic checks, with no person reading them first. That only works if removing a document is easy and fast. This page is how.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">What you can report</h2>
+    <ul class="pl-5 space-y-1.5 mt-0 list-disc">
+      <li>Your own work, or someone else's, that is copyrighted and was added without the right to share it.</li>
+      <li>Personal or private information about a person.</li>
+      <li>Harmful or illegal content.</li>
+      <li>Wrong or low-quality text.</li>
+    </ul>
+    <p>You do not need an account. On any answer, tap <b>Report this</b> under the sources and it points at the exact document. Use the form below if you saw it somewhere else.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">What happens next</h2>
+    <ol class="pl-5 space-y-1.5 mt-0 list-decimal">
+      <li>You get a report id straight away.</li>
+      <li><b>Copyright and personal-information reports hide the document from every answer immediately.</b> It stays hidden until it is decided.</li>
+      <li>The OpenKB maintainer decides: remove it for good (text and search data deleted), put it back, or leave it as is. Target: within 24 hours.</li>
+      <li>If you left an email, we tell you the outcome.</li>
+      <li>Every report and every removal is written to a log that cannot be edited afterwards.</li>
+    </ol>
+    <p>If a source keeps causing valid reports, we stop accepting content from it. Removal does not need a reason or a lawyer's letter. If you are a rights holder, just report it.</p>
+
+    <h2 class="text-xl font-semibold mt-8 mb-3">Send a report</h2>
+    @if (state() === 'done') {
+      <div class="rounded-xl border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-900 p-4">
+        <b>Thank you. Report received.</b> Report id: {{ msg() }}. We will look at it within 24 hours.
+      </div>
+    } @else {
+      <label class="block mb-3 text-[14px]">Which document, or where did you see it? A title or link helps.
+        <input class="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" maxlength="300" [value]="what()" (input)="what.set($any($event.target).value)">
+      </label>
+      <label class="block mb-3 text-[14px]">What is wrong?
+        <select class="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" [value]="reason()" (change)="reason.set($any($event.target).value)">
+          @for (r of reasons; track r.v) { <option [value]="r.v">{{ r.t }}</option> }
+        </select>
+      </label>
+      <label class="block mb-3 text-[14px]">Details
+        <textarea class="mt-1 w-full min-h-[96px] px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" maxlength="1500" [value]="details()" (input)="details.set($any($event.target).value)"></textarea>
+      </label>
+      <label class="block mb-3 text-[14px]">Your email (optional, only to tell you the outcome)
+        <input type="email" class="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" [value]="email()" (input)="email.set($any($event.target).value)">
+      </label>
+      @if (state() === 'error') { <p class="text-red-600 dark:text-red-400">{{ msg() }}</p> }
+      <button class="px-5 min-h-[44px] rounded-lg bg-neutral-800 text-white dark:bg-neutral-200 dark:text-neutral-900 cursor-pointer border-0 disabled:opacity-50" [disabled]="state() === 'sending' || !what().trim()" (click)="send()">{{ state() === 'sending' ? 'Sending...' : 'Send report' }}</button>
+    }
+  </main>
+</div>

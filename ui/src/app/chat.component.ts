@@ -110,6 +110,48 @@ export class ChatComponent implements OnInit {
   panel = signal<'how' | 'donate' | null>(null);
   showArchived = signal(false);
   sidebarOpen = signal(false);
+  reportOpen = signal(false);
+  reportChoices = signal<{ id: string; name: string }[]>([]);
+  reportDoc = signal('');
+  reportReason = signal('copyright');
+  reportDetails = signal('');
+  reportEmail = signal('');
+  reportState = signal<'idle' | 'sending' | 'done' | 'error'>('idle');
+  reportResult = signal('');
+  reportMsg = signal('');
+  readonly reasons = [
+    { v: 'copyright', t: 'It is copyrighted and should not be here' },
+    { v: 'personal-data', t: 'It has personal or private information' },
+    { v: 'harmful', t: 'It is harmful or illegal' },
+    { v: 'quality', t: 'It is wrong or low quality' },
+    { v: 'other', t: 'Something else' },
+  ];
+
+  /** Unique (id, name) pairs for the sources of one answer. */
+  sourceChoices(m: { sources?: string[]; source_ids?: string[] }): { id: string; name: string }[] {
+    const seen = new Set<string>(); const out: { id: string; name: string }[] = [];
+    (m.sources || []).forEach((name, i) => { const id = (m.source_ids || [])[i] || ''; if (id && !seen.has(id)) { seen.add(id); out.push({ id, name }); } });
+    return out;
+  }
+
+  openReport(m: { sources?: string[]; source_ids?: string[] }): void {
+    const ch = this.sourceChoices(m);
+    this.reportChoices.set(ch); this.reportDoc.set(ch[0]?.id || '');
+    this.reportReason.set('copyright'); this.reportDetails.set(''); this.reportEmail.set('');
+    this.reportState.set('idle'); this.reportMsg.set(''); this.reportResult.set(''); this.reportOpen.set(true);
+  }
+
+  sendReport(): void {
+    if (this.reportState() === 'sending') return;
+    this.reportState.set('sending'); this.reportMsg.set('');
+    this.api.report(this.reportDoc(), this.reportReason(), this.reportDetails(), this.reportEmail()).subscribe({
+      next: (r) => {
+        this.reportState.set('done');
+        this.reportResult.set(r.id + (r.hidden ? '|hidden' : ''));
+      },
+      error: (e) => { this.reportState.set('error'); this.reportMsg.set(e?.error?.error || 'Could not send the report. Try again in a moment.'); },
+    });
+  }
   desktopOpen = signal(typeof localStorage === 'undefined' || localStorage.getItem('okb-sidebar') !== 'closed');
   searching = signal(false);
   query = signal('');
@@ -283,7 +325,7 @@ export class ChatComponent implements OnInit {
     this.error.set(null);
     this.messages.update((m) => [...m, { role: 'user', text }]);
     this.api.ask(text, taskId).subscribe({
-      next: (r) => this.typeOut(r.answer, r.sources, r.not_found),
+      next: (r) => this.typeOut(r.answer, r.sources, r.not_found, r.source_ids),
       error: (e) => {
         this.busy.set(false);
         this.waiting.set(false);
@@ -297,10 +339,10 @@ export class ChatComponent implements OnInit {
 
   /** Client-side typewriter: the full answer is already here; reveal it quickly,
    *  then show sources and the refusal box at the end. The server answer is unchanged. */
-  private typeOut(full: string, sources: string[], notFound: boolean): void {
+  private typeOut(full: string, sources: string[], notFound: boolean, sourceIds: string[] = []): void {
     this.waiting.set(false);
     const finish = () => {
-      this.messages.update((m) => [...m.slice(0, -1), { role: 'assistant', text: full, sources, not_found: notFound }]);
+      this.messages.update((m) => [...m.slice(0, -1), { role: 'assistant', text: full, sources, source_ids: sourceIds, not_found: notFound }]);
       this.busy.set(false);
     };
     const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;

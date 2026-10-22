@@ -162,7 +162,7 @@ def report(doc_id, reason, details="", email="", db_path=None):
     """Public report. Copyright and personal-data reports hide the document at once (soft takedown)."""
     if reason not in REPORT_REASONS: return None
     c = connect(db_path)
-    fixture = (doc_id or "").startswith("fixture:")  # test-corpus documents are not in the library table
+    fixture = (doc_id or "").startswith(("fixture:", "general"))  # test corpus and site-level reports have no row in the documents table
     if not fixture and not c.execute("SELECT 1 FROM documents WHERE id=?", (doc_id,)).fetchone(): c.close(); return None
     rid = "rep-" + uuid.uuid4().hex[:10]
     c.execute("INSERT INTO reports VALUES (?,?,?,?,?,?,?,NULL,NULL)", (rid, doc_id, reason, (details or "")[:2000], (email or "")[:200], "open", now()))
