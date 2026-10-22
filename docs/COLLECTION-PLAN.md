@@ -6,7 +6,7 @@ Builds on docs/LIBRARIAN.md (spec draft) and the existing intake pipeline.
 ## Fixed rules (Walter's decisions)
 - Decision 2026-10-22: single licence, CC BY-SA, for everything in the library. No donor choice of licence, no non-commercial (NC) variant.
 - One library, one licence: CC BY-SA. No separate showcase or "producer" area. The producer idea stays as story material for posts and videos.
-- Collectors take public domain or CC0 only. Nothing else is collected by machine.
+- Our own collectors take public domain or CC0 only. User crawl agents may also submit CC BY and CC BY-SA sources, human-reviewed (section 2). Nothing else is collected by machine.
 - Collectors are opencode agents on the local model. No paid model calls. Max 2 running at once.
 - The public donate flow stays CLOSED ("Donations open soon") until Walter says otherwise.
 - Every document keeps provenance (source URL, licence evidence, date, who added it). Takedown must work.
@@ -32,10 +32,11 @@ Who: signed-in users on desktop or agent mode, pointing their own agent at their
 Gate (the licensing gate):
 - The user declares the source and the licence up front and agrees to the same three statements as a manual donation (it is theirs to share or the licence allows it, CC BY-SA OK, may be edited).
 - Their agent submits through one API only: it can add candidates to the review queue. It cannot publish.
-- Same machine-side licence check as section 1. Public domain / CC0 / CC BY / CC BY-SA sources can pass the check for a user's crawler only if the user's declaration and the page evidence agree; anything else is rejected or held.
+- Same machine-side licence check as section 1. Only PD / CC0 / CC BY / CC BY-SA sources are accepted, and only if the user's declaration and the page evidence agree. NC, ND, unclear and unlicensed sources are rejected. Passing the check never auto-publishes: a maintainer reviews every user-crawler submission.
 - Each submission carries the user id, so a bad actor is traceable and can be cut off.
 
-Open decision for Walter: should user crawlers be limited to PD / CC0 like ours, or also accept CC BY / CC BY-SA sources? Proposal: start with PD / CC0 only, same as ours. Widen later.
+Decision 2026-10-22 (Walter): user crawl agents contribute to the ONE shared library, not to private collections. The point is to grow together instead of everyone duplicating the same work.
+Accepted source licences for user crawlers: public domain, CC0, CC BY and CC BY-SA. The original author credit and licence are kept in the provenance record. NC and ND sources are excluded. Everything lands in the library under the single CC BY-SA rule (CC BY and CC BY-SA sources are compatible with it, with credit kept). User-crawler submissions are always human-reviewed, even for these licences.
 
 ## 3. Manual upload
 Reuses the existing donate pipeline: upload (PDF, Word, scans, photos) -> convert -> preview of the text -> three declarations -> maintainer review -> join the library under CC BY-SA, credited. It is built behind the closed switch, so the page can keep saying "opens soon" while Walter and a few testers use it. Walter's own book is the first test document, by his choice.

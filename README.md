@@ -24,6 +24,8 @@ reader that knows its limits, sitting on top of a library built by people who
 said yes. If we're right, knowledge stops being a subscription and starts being
 a commons.
 
+The library grows together, not by everyone duplicating the same work: people and their own agents contribute to the one shared library, and every document keeps its source, licence and credit.
+
 ## How it works
 
 - **The library** - documents donated under CC BY-SA, converted to Markdown,
