@@ -23,5 +23,6 @@ def crosscheck(q, answer, hits, gen):
     nums = [int(n) for n in re.findall(r"\d+", (re.search(r"OUTLIER:\s*([^\n]*)", out, re.I) or [0, ""])[1] if re.search(r"OUTLIER:", out, re.I) else "")]
     outl = [items[n - 1][0] for n in nums if 1 <= n <= len(items)]
     note = (re.search(r"NOTE:\s*([^\n]*)", out, re.I) or [0, ""])[1].strip()
-    if not outl: return {"checked": True, "verdict": "agree", "outliers": [], "note": ""}
+    if not outl or re.search(r"(?i)\b(does not|doesn't|do not|no|not) (mention|say|state|address|cover|contain|discuss|provide|include)|nothing about|unrelated|different topic|not relevant|no information", note):
+        return {"checked": True, "verdict": "agree", "outliers": [], "note": ""}   # a source that is silent or off-topic is not a contradiction
     return {"checked": True, "verdict": "contradict", "outliers": outl, "note": re.sub(r"(?i)^none\.?$", "", note)[:240]}
