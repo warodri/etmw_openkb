@@ -43,7 +43,7 @@ def connect(path=None):
     CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit_log BEGIN SELECT RAISE(ABORT, 'audit_log is append-only'); END;
     """)
     dh = [r[1] for r in c.execute("PRAGMA table_info(documents)")]
-    for col in ("text_url TEXT", "recipe TEXT"):
+    for col in ("text_url TEXT", "recipe TEXT", "licence_basis TEXT"):
         if col.split()[0] not in dh: c.execute("ALTER TABLE documents ADD COLUMN " + col)
     ch = [r[1] for r in c.execute("PRAGMA table_info(chunks)")]
     for col in ("start INTEGER", "chash TEXT"):
@@ -109,11 +109,21 @@ def submit(*a, **k):
     try: return _submit(c, *a, **k)
     finally: c.close()
 
-def _submit(c, text, title, origin, licence, source_url="", credit="", contributor="", declarations=None, embed=ollama_embed, db_path=None, text_url="", recipe=""):
+def _submit(c, text, title, origin, licence, source_url="", credit="", contributor="", declarations=None, embed=ollama_embed, db_path=None, text_url="", recipe="", detected_licence="", default_licence=""):
     """Run checks; publish if all pass. Returns {ok, doc_id, reasons}. No human review step."""
     reasons = []
+    # Licence rule for crawler submissions (Walter, 22 Oct 13:22): the licence found on the page wins. If the page shows none,
+    # the crawler user's mandatory default licence applies, is logged with the account, and the entry is tagged "user-declared".
+    basis = "page" if origin == "collector" or detected_licence else "declared"
+    if origin == "user-crawler":
+        if (detected_licence or "").strip():
+            licence, basis = detected_licence, "page"
+        elif (default_licence or "").strip():
+            licence, basis = default_licence, "user-declared"
+        else:
+            reasons.append("no licence found on the page and the account has no default licence")
     key = norm_licence(licence)
-    if key is None: reasons.append("licence missing, unclear, or not accepted (accepted: public domain, CC0, CC BY, CC BY-SA, MIT, Apache-2.0, BSD; NC/ND excluded)")
+    if key is None and not reasons: reasons.append("licence missing, unclear, or not accepted (accepted: public domain, CC0, CC BY, CC BY-SA, MIT, Apache-2.0, BSD; NC/ND excluded)")
     if origin not in ("manual", "collector", "user-crawler"): reasons.append("unknown origin")
     if origin in ("manual", "user-crawler"):
         need = ("own_or_licensed", "ok_with_cc_by_sa", "may_be_edited")  # key name kept for compatibility: means "OK with the open licence picked"
@@ -136,12 +146,12 @@ def _submit(c, text, title, origin, licence, source_url="", credit="", contribut
     parts = chunk_text(text)
     vecs = [embed(p) for p in parts]  # may raise: nothing is written yet
     ref_only = bool(text_url and recipe)   # reference-only: offsets + hash + URL are kept, the text is not
-    c.execute("INSERT INTO documents (id,title,origin,source_url,licence,credit,contributor,status,hash,head_hash,chars,created_at,text_url,recipe) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-              (did, title.strip(), origin, source_url, ACCEPTED[key], credit, contributor, "live", h, hh, len(text), now(), text_url or None, recipe or None))
+    c.execute("INSERT INTO documents (id,title,origin,source_url,licence,credit,contributor,status,hash,head_hash,chars,created_at,text_url,recipe,licence_basis) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+              (did, title.strip(), origin, source_url, ACCEPTED[key], credit, contributor, "live", h, hh, len(text), now(), text_url or None, recipe or None, basis))
     for i, (p, v) in enumerate(zip(parts, vecs)):
         c.execute("INSERT INTO chunks (doc_id,idx,text,vec,start,chash) VALUES (?,?,?,?,?,?)",
                   (did, i, "" if ref_only else p, json.dumps(v), i * (CHUNK_CHARS - OVERLAP), hashlib.sha256(p.encode("utf-8")).hexdigest()[:32]))
-    log(c, "published", did, contributor or origin, json.dumps({"title": title, "origin": origin, "licence": ACCEPTED[key], "source_url": source_url, "chunks": len(parts)}))
+    log(c, "published", did, contributor or origin, json.dumps({"title": title, "origin": origin, "licence": ACCEPTED[key], "licence_basis": basis, "default_licence_of": (contributor if basis == "user-declared" else None), "source_url": source_url, "chunks": len(parts)}))
     c.commit(); return {"ok": True, "doc_id": did, "reasons": []}
 
 def live_chunks(db_path=None):
@@ -168,11 +178,12 @@ def live_titles(db_path=None):
     c = connect(db_path); rows = [(r["id"], r["title"]) for r in c.execute("SELECT id, title FROM documents WHERE status='live'")]; c.close(); return rows
 
 def licences_for(doc_ids, db_path=None):
-    """Licence name per document id (same order). Unknown ids give an empty string."""
+    """Licence name per document id (same order), with " (user-declared)" when the licence is the crawler user's default
+    rather than one found on the page. Unknown ids give an empty string."""
     c = connect(db_path); out = []
     for d in doc_ids:
-        r = c.execute("SELECT licence FROM documents WHERE id=?", (d,)).fetchone()
-        out.append(r["licence"] if r and r["licence"] else "")
+        r = c.execute("SELECT licence, licence_basis FROM documents WHERE id=?", (d,)).fetchone()
+        out.append(((r["licence"] + (" (user-declared)" if r["licence_basis"] == "user-declared" else "")) if r and r["licence"] else ""))
     c.close(); return out
 
 def get_document(doc_id, db_path=None):
