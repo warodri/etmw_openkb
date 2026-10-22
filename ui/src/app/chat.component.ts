@@ -122,6 +122,7 @@ export class ChatComponent implements OnInit {
   reportClaimant = signal('');
   reportUrl = signal('');
   reportStatement = signal(false);
+  reportHolderContact = signal('');
   reportOutcome = signal('');
   readonly reasons = [
     { v: 'copyright', t: 'It is copyrighted and should not be here' },
@@ -142,14 +143,14 @@ export class ChatComponent implements OnInit {
     const ch = this.sourceChoices(m);
     this.reportChoices.set(ch); this.reportDoc.set(ch[0]?.id || '');
     this.reportReason.set('copyright'); this.reportDetails.set(''); this.reportEmail.set('');
-    this.reportState.set('idle'); this.reportMsg.set(''); this.reportResult.set(''); this.reportClaimant.set(''); this.reportUrl.set(''); this.reportStatement.set(false); this.reportOutcome.set(''); this.reportOpen.set(true);
+    this.reportState.set('idle'); this.reportMsg.set(''); this.reportResult.set(''); this.reportClaimant.set(''); this.reportHolderContact.set(''); this.reportUrl.set(''); this.reportStatement.set(false); this.reportOutcome.set(''); this.reportOpen.set(true);
   }
 
   sendReport(): void {
     if (this.reportState() === 'sending') return;
     this.reportState.set('sending'); this.reportMsg.set('');
     this.api.report({ doc_id: this.reportDoc(), reason: this.reportReason(), details: this.reportDetails(), email: this.reportEmail(),
-      claimant: this.reportClaimant(), evidence_url: this.reportUrl(), statement: this.reportStatement() }).subscribe({
+      claimant: this.reportClaimant(), holder_contact: this.reportHolderContact(), evidence_url: this.reportUrl(), statement: this.reportStatement() }).subscribe({
       next: (r) => {
         this.reportOutcome.set(r.outcome); this.reportMsg.set(r.message); this.reportResult.set(r.id);
         this.reportState.set(r.outcome === 'needs-evidence' ? 'error' : 'done');

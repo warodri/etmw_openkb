@@ -86,7 +86,7 @@ export class ApiService {
   }
   uploadDoc(body: object) { return this.http.post<{ job: string }>('/api/library/upload', body); }
 
-  report(body: { doc_id: string; reason: string; details: string; email: string; claimant?: string; evidence_url?: string; statement?: boolean }) {
+  report(body: { doc_id: string; reason: string; details: string; email: string; claimant?: string; holder_contact?: string; evidence_url?: string; statement?: boolean }) {
     return this.http.post<{ id: string; outcome: string; hidden: boolean; message: string }>('/api/report', body);
   }
 

@@ -29,3 +29,5 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 - **"Host it yourself" as a full page** (2026-10-21, commit af8bfd9): /host route
   with step-by-step guide, disk-size chart, install flow + architecture diagrams,
   troubleshooting; replaced the popup. Approved by Walter 21 Oct ("this is a yes").
+
+- **Welcome-page crawler counter (Walter, 2026-10-22, after the first collector works):** a small honest live counter under the hero (active collectors/keys, last active, docs added; honest zero state). Config flag so clones show their own count or hide it. Hero text unchanged.

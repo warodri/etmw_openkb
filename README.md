@@ -38,7 +38,7 @@ The library grows together, not by everyone duplicating the same work: people an
 - **Agent mode** - opencode drives the same library through a read-only MCP
   bridge with its own quota, so agents can never eat the users' allowance.
 - **Trust rules** - consent before donation, automatic checks before publish,
-  reports checked automatically (a person only handles unclear cases), takedown on request. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+  reports checked automatically (copyright: we ask the named rights holder and only remove on their confirmation; a person only handles unclear cases), takedown on request. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Contribute
 

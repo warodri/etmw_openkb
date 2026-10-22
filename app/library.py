@@ -35,6 +35,8 @@ def connect(path=None):
     CREATE TABLE IF NOT EXISTS chunks (doc_id TEXT, idx INTEGER, text TEXT, vec TEXT, PRIMARY KEY (doc_id, idx));
     CREATE TABLE IF NOT EXISTS reports (id TEXT PRIMARY KEY, doc_id TEXT, reason TEXT, details TEXT, email TEXT, status TEXT,
         created_at TEXT, decided_at TEXT, decision TEXT);
+    CREATE TABLE IF NOT EXISTS verifications (id TEXT PRIMARY KEY, report_id TEXT, doc_id TEXT, to_email TEXT, holder TEXT, token TEXT UNIQUE,
+        status TEXT, created_at TEXT, approved_at TEXT, sent_at TEXT, expires_at TEXT, answered_at TEXT, answer TEXT);
     CREATE TABLE IF NOT EXISTS reporters (reporter TEXT PRIMARY KEY, upheld INTEGER DEFAULT 0, dismissed INTEGER DEFAULT 0);
     CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, ts TEXT, event TEXT, doc_id TEXT, actor TEXT, detail TEXT);
     CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit_log BEGIN SELECT RAISE(ABORT, 'audit_log is append-only'); END;
@@ -210,7 +212,7 @@ def _bump(c, reporter, field):
     c.execute("INSERT OR IGNORE INTO reporters (reporter) VALUES (?)", (reporter,))
     c.execute(f"UPDATE reporters SET {field}={field}+1 WHERE reporter=?", (reporter,))
 
-def report(doc_id, reason, details="", email="", reporter="anon", claimant="", evidence_url="", statement=False, fetch=fetch_page_text, db_path=None):
+def report(doc_id, reason, details="", email="", reporter="anon", claimant="", evidence_url="", statement=False, holder_contact="", fetch=fetch_page_text, db_path=None):
     """Public report with automatic triage. Returns {id, outcome, hidden, message} or None if refused.
     outcome: removed (obviously valid) | dismissed (bogus or unsupported) | queued (ambiguous, maintainer looks) |
              needs-evidence (not enough to act on; the reporter is told what to add)."""
@@ -225,8 +227,7 @@ def report(doc_id, reason, details="", email="", reporter="anon", claimant="", e
     rid = "rep-" + uuid.uuid4().hex[:10]
     def finish(outcome, why, message, hide=None, remove=False):
         c.execute("INSERT INTO reports (id, doc_id, reason, details, email, status, created_at, decided_at, decision, reporter, claimant, evidence_url, triage) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                  (rid, doc_id, reason, details, (email or "")[:200], "open" if outcome == "queued" else "closed", now(),
-                   None if outcome == "queued" else now(), None if outcome == "queued" else outcome, reporter, (claimant or "")[:200], (evidence_url or "")[:500], why))
+                  (rid, doc_id, reason, details, (email or "")[:200], "open" if outcome == "queued" else ("waiting" if outcome == "awaiting-source" else "closed"), now(), None if outcome in ("queued", "awaiting-source") else now(), None if outcome in ("queued", "awaiting-source") else outcome, reporter, (claimant or "")[:200], (evidence_url or "")[:500], why))
         log(c, "reported", doc_id, "public:" + reporter, json.dumps({"report": rid, "reason": reason, "outcome": outcome, "why": why}))
         if outcome == "dismissed": _bump(c, reporter, "dismissed")
         if remove and doc: _bump(c, reporter, "upheld")
@@ -249,18 +250,28 @@ def report(doc_id, reason, details="", email="", reporter="anon", claimant="", e
         return finish("queued" if ok else "dismissed", "test-corpus or site-level report", "Thank you. We will look at this." if ok else "Please add more detail.")
     # ---- by reason ----
     if reason == "copyright":
-        if not (claimant.strip() and re.match(r"^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$", email or "") and re.match(r"^https?://", evidence_url or "") and statement):
-            return finish("needs-evidence", "copyright notice incomplete", "To act on a copyright report we need: your name, your email, a link to where the original is, and your confirmation that you are the owner or authorised to act. Please add them and send again.")
+        contact = (holder_contact or "").strip()
+        if not (claimant.strip() and re.match(r"^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$", contact) and re.match(r"^https?://", evidence_url or "") and statement):
+            return finish("needs-evidence", "copyright notice incomplete", "To act on a copyright report we need: who the work belongs to (the rights holder), an email address for them, a link to where the original is, and your confirmation that you are the owner or authorised to act. Please add them and send again.")
         page = fetch(evidence_url)
-        if page is None: return finish("queued", "evidence page could not be fetched", "Received. We could not open your link automatically, so a person will look. The document is hidden meanwhile.", hide=True)
-        ov = overlap(text, page)
-        dom_doc = urllib.parse.urlparse(doc["source_url"] or "").hostname
-        dom_ev = urllib.parse.urlparse(evidence_url).hostname
-        if ov < 0.10: return finish("dismissed", f"evidence page does not contain the document (overlap {ov:.2f})", "We checked your link and it does not contain this document's text, so we could not act. If you meant another link, send it again.", hide=False)
-        permissive, notice = bool(PERMISSIVE.search(page)), bool(NOTICE.search(page))
-        if ov >= 0.5 and notice and not permissive and dom_ev != dom_doc:
-            return finish("removed", f"evidence page matches the text (overlap {ov:.2f}) and carries a copyright notice", "Thank you. We checked your link, it matches, and the document has been removed.", remove=True)
-        return finish("queued", f"partial or unclear match (overlap {ov:.2f}, notice={notice}, permissive licence on page={permissive})", "Received. The match is not clear-cut, so a person will decide. The document is hidden meanwhile." if doc["origin"] != "collector" else "Received. A person will decide.", hide=(doc["origin"] != "collector"))
+        strong = False; note = "evidence page could not be fetched"
+        if page is not None:
+            ov = overlap(text, page)
+            dom_doc = urllib.parse.urlparse(doc["source_url"] or "").hostname
+            dom_ev = urllib.parse.urlparse(evidence_url).hostname
+            if ov < 0.10: return finish("dismissed", f"evidence page does not contain the document (overlap {ov:.2f})", "We checked your link and it does not contain this document's text, so we could not act. If you meant another link, send it again.", hide=False)
+            permissive, notice = bool(PERMISSIVE.search(page)), bool(NOTICE.search(page))
+            strong = ov >= 0.5 and notice and not permissive and dom_ev != dom_doc and doc["origin"] != "collector"
+            note = f"overlap {ov:.2f}, notice={notice}, permissive licence on page={permissive}"
+        cd, ed = contact.split("@")[1].lower(), (urllib.parse.urlparse(evidence_url).hostname or "").lower()
+        note += "; contact domain " + ("matches" if ed == cd or ed.endswith("." + cd) or cd.endswith("." + ed) else "differs from") + " the evidence site"
+        res = finish("awaiting-source", note, "Thank you. We are asking the rights holder you named to confirm. Nothing is removed unless they confirm. " + ("The document is hidden until they answer, for up to 7 days." if strong else "The document stays up while we wait, for up to 7 days."), hide=strong)
+        c2 = connect(db_path)
+        c2.execute("INSERT INTO verifications (id, report_id, doc_id, to_email, holder, token, status, created_at) VALUES (?,?,?,?,?,?,?,?)",
+                   ("ver-" + uuid.uuid4().hex[:10], rid, doc_id, contact[:200], claimant[:200], uuid.uuid4().hex, "draft", now()))
+        log(c2, "verification-drafted", doc_id, "system", json.dumps({"report": rid, "to": contact}))
+        c2.commit(); c2.close()
+        return res
     if reason == "personal-data":
         sn = details
         norm = lambda t: re.sub(r"\s+", " ", t.lower())
@@ -302,6 +313,80 @@ def decide_report(rid, decision, actor, db_path=None):
     else: restore(r["doc_id"], actor, f"report {rid} {decision}", db_path=db_path)
     return True
 
+VERIFY_DAYS = 7
+def verification_mail(v, doc_title, base_url):
+    link = base_url.rstrip("/") + "/verify/" + v["token"]
+    subj = "Please confirm: is this your work? (OpenKB copyright check)"
+    body = (f"Hello {v['holder']},\n\n"
+            "Someone has told the OpenKB library (an open, CC BY-SA knowledge library) that a document in it belongs to you or to the organisation you run, "
+            "and was added without permission:\n\n"
+            f"  {doc_title or v['doc_id']}\n\n"
+            "We do not remove documents on a stranger's say-so, so we are asking you directly. One click is enough:\n\n"
+            f"  {link}\n\n"
+            "On that page you can say 'Yes, this is ours and it is used without permission' (we then remove the document at once) "
+            "or 'No, this is not ours / we do not object' (we keep it). If we hear nothing within "
+            f"{VERIFY_DAYS} days we keep the document and close the report. You can also reply to this email.\n\n"
+            "We will never ask you for money or personal documents. If you did not expect this message, ignore it.\n\n"
+            "OpenKB, https://openkb--warodri.entertomyworld.com/report")
+    return subj, body
+
+def outbox(db_path=None):
+    c = connect(db_path)
+    rows = [dict(r) for r in c.execute("SELECT v.*, d.title FROM verifications v LEFT JOIN documents d ON d.id=v.doc_id WHERE v.status IN ('draft','approved') ORDER BY v.created_at").fetchall()]
+    c.close(); return rows
+
+def approve_outbox(vid, actor="maintainer-cli", db_path=None):
+    """Approve ONE drafted verification email for sending. Nothing is sent without this."""
+    c = connect(db_path)
+    n = c.execute("UPDATE verifications SET status='approved', approved_at=? WHERE id=? AND status='draft'", (now(), vid)).rowcount
+    if n: log(c, "verification-approved", None, actor, vid)
+    c.commit(); c.close(); return bool(n)
+
+def send_approved(sender, base_url, db_path=None):
+    """Send approved verification emails through sender(to, subject, body). Returns count sent."""
+    c = connect(db_path); sent = 0
+    for v in c.execute("SELECT v.*, d.title FROM verifications v LEFT JOIN documents d ON d.id=v.doc_id WHERE v.status='approved'").fetchall():
+        subj, body = verification_mail(dict(v), v["title"], base_url)
+        if sender(v["to_email"], subj, body):
+            c.execute("UPDATE verifications SET status='sent', sent_at=?, expires_at=? WHERE id=?", (now(), datetime.fromtimestamp(time.time() + VERIFY_DAYS * 86400, timezone.utc).isoformat(), v["id"]))
+            log(c, "verification-sent", v["doc_id"], "system", v["id"]); sent += 1
+    c.commit(); c.close(); return sent
+
+def get_verification(token, db_path=None):
+    c = connect(db_path); v = c.execute("SELECT v.*, d.title FROM verifications v LEFT JOIN documents d ON d.id=v.doc_id WHERE v.token=?", (token or "",)).fetchone(); c.close()
+    return dict(v) if v else None
+
+def answer_verification(token, answer, db_path=None):
+    """The named rights holder answers: 'yes' (ours, used without permission: remove) or 'no' (keep). Only a sent, unanswered, unexpired request counts."""
+    if answer not in ("yes", "no"): return False
+    c = connect(db_path); v = c.execute("SELECT * FROM verifications WHERE token=? AND status='sent'", (token or "",)).fetchone()
+    if not v or (v["expires_at"] and v["expires_at"] < now()): c.close(); return False
+    c.execute("UPDATE verifications SET status='answered', answer=?, answered_at=? WHERE id=?", (answer, now(), v["id"]))
+    dec = "remove" if answer == "yes" else "dismiss"
+    c.execute("UPDATE reports SET status='closed', decided_at=?, decision=? WHERE id=?", (now(), "removed" if answer == "yes" else "dismissed", v["report_id"]))
+    r = c.execute("SELECT reporter FROM reports WHERE id=?", (v["report_id"],)).fetchone()
+    _bump(c, (r["reporter"] if r else None) or "anon", "upheld" if answer == "yes" else "dismissed")
+    log(c, "verification-answered", v["doc_id"], "rights-holder:" + v["to_email"], json.dumps({"verification": v["id"], "answer": answer}))
+    c.commit(); c.close()
+    if answer == "yes": takedown(v["doc_id"], "source-confirmed:" + v["id"], f"removed: rights holder {v['holder']} confirmed (report {v['report_id']})", hard=True, db_path=db_path)
+    else: restore(v["doc_id"], "source-answered:" + v["id"], f"rights holder did not confirm (report {v['report_id']})", db_path=db_path)
+    return True
+
+def expire_verifications(db_path=None):
+    """No answer in VERIFY_DAYS (or never approved in 14 days): close the report, keep or restore the document. Nothing is removed."""
+    c = connect(db_path); n = 0
+    old = datetime.fromtimestamp(time.time() - 14 * 86400, timezone.utc).isoformat()
+    rows = c.execute("SELECT * FROM verifications WHERE (status='sent' AND expires_at<?) OR (status IN ('draft','approved') AND created_at<?)", (now(), old)).fetchall()
+    for v in rows:
+        c.execute("UPDATE verifications SET status='expired' WHERE id=?", (v["id"],))
+        c.execute("UPDATE reports SET status='closed', decided_at=?, decision='dismissed' WHERE id=?", (now(), v["report_id"]))
+        log(c, "verification-expired", v["doc_id"], "system", json.dumps({"verification": v["id"], "report": v["report_id"]})); n += 1
+    c.commit(); c.close()
+    for v in rows:
+        d = get_document(v["doc_id"], db_path)
+        if d and d["status"] == "hidden": restore(v["doc_id"], "system", "no answer from the named rights holder, report closed", db_path=db_path)
+    return n
+
 def open_reports(db_path=None):
     c = connect(db_path)
     rows = [dict(r) for r in c.execute("SELECT r.*, d.title, d.status AS doc_status FROM reports r LEFT JOIN documents d ON d.id=r.doc_id WHERE r.status='open' ORDER BY r.created_at").fetchall()]
@@ -321,6 +406,10 @@ if __name__ == "__main__":
         for r in open_reports(): print(r["id"], r["doc_id"], r["reason"], r["doc_status"], (r["title"] or ""), "|", r["details"][:120])
     elif a[:2] == ["decide"] and len(a) == 3 + 0 or (a[:1] == ["decide"] and len(a) == 3): print(decide_report(a[1], a[2], "maintainer-cli"))
     elif a[:1] == ["remove"] and len(a) >= 2: print(takedown(a[1], "maintainer-cli", " ".join(a[2:]) or "removed by maintainer", hard=True))
+    elif a[:1] == ["outbox"]:
+        for v in outbox(): print(v["id"], v["status"], v["to_email"], v["holder"], v["doc_id"], v["title"])
+    elif a[:1] == ["approve"] and len(a) == 2: print(approve_outbox(a[1]))
+    elif a[:1] == ["expire"]: print(expire_verifications())
     elif a[:1] == ["log"]:
         c = connect()
         for r in c.execute("SELECT ts, event, doc_id, actor, detail FROM audit_log ORDER BY id DESC LIMIT 30"): print(tuple(r))
