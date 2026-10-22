@@ -42,6 +42,12 @@ def connect(path=None):
     CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit_log BEGIN SELECT RAISE(ABORT, 'audit_log is append-only'); END;
     CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit_log BEGIN SELECT RAISE(ABORT, 'audit_log is append-only'); END;
     """)
+    dh = [r[1] for r in c.execute("PRAGMA table_info(documents)")]
+    for col in ("text_url TEXT", "recipe TEXT"):
+        if col.split()[0] not in dh: c.execute("ALTER TABLE documents ADD COLUMN " + col)
+    ch = [r[1] for r in c.execute("PRAGMA table_info(chunks)")]
+    for col in ("start INTEGER", "chash TEXT"):
+        if col.split()[0] not in ch: c.execute("ALTER TABLE chunks ADD COLUMN " + col)
     have = [r[1] for r in c.execute("PRAGMA table_info(reports)")]
     for col in ("reporter TEXT", "claimant TEXT", "evidence_url TEXT", "triage TEXT"):
         if col.split()[0] not in have: c.execute("ALTER TABLE reports ADD COLUMN " + col)
@@ -103,7 +109,7 @@ def submit(*a, **k):
     try: return _submit(c, *a, **k)
     finally: c.close()
 
-def _submit(c, text, title, origin, licence, source_url="", credit="", contributor="", declarations=None, embed=ollama_embed, db_path=None):
+def _submit(c, text, title, origin, licence, source_url="", credit="", contributor="", declarations=None, embed=ollama_embed, db_path=None, text_url="", recipe=""):
     """Run checks; publish if all pass. Returns {ok, doc_id, reasons}. No human review step."""
     reasons = []
     key = norm_licence(licence)
@@ -129,10 +135,12 @@ def _submit(c, text, title, origin, licence, source_url="", credit="", contribut
         c.commit(); return {"ok": False, "doc_id": None, "reasons": reasons}
     parts = chunk_text(text)
     vecs = [embed(p) for p in parts]  # may raise: nothing is written yet
-    c.execute("INSERT INTO documents VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NULL,NULL)",
-              (did, title.strip(), origin, source_url, ACCEPTED[key], credit, contributor, "live", h, hh, len(text), now()))
+    ref_only = bool(text_url and recipe)   # reference-only: offsets + hash + URL are kept, the text is not
+    c.execute("INSERT INTO documents (id,title,origin,source_url,licence,credit,contributor,status,hash,head_hash,chars,created_at,text_url,recipe) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+              (did, title.strip(), origin, source_url, ACCEPTED[key], credit, contributor, "live", h, hh, len(text), now(), text_url or None, recipe or None))
     for i, (p, v) in enumerate(zip(parts, vecs)):
-        c.execute("INSERT INTO chunks VALUES (?,?,?,?)", (did, i, p, json.dumps(v)))
+        c.execute("INSERT INTO chunks (doc_id,idx,text,vec,start,chash) VALUES (?,?,?,?,?,?)",
+                  (did, i, "" if ref_only else p, json.dumps(v), i * (CHUNK_CHARS - OVERLAP), hashlib.sha256(p.encode("utf-8")).hexdigest()[:32]))
     log(c, "published", did, contributor or origin, json.dumps({"title": title, "origin": origin, "licence": ACCEPTED[key], "source_url": source_url, "chunks": len(parts)}))
     c.commit(); return {"ok": True, "doc_id": did, "reasons": []}
 
@@ -145,14 +153,15 @@ def live_chunks(db_path=None):
 
 def live_doc_loaders(db_path=None):
     """{doc_id: loader} for live documents. A loader returns [(chunk_dict, vector)] for that one document (read on demand)."""
-    c = connect(db_path); rows = c.execute("SELECT id, title FROM documents WHERE status='live'").fetchall(); c.close()
-    def mk(did, title):
+    c = connect(db_path); rows = c.execute("SELECT id, title, text_url FROM documents WHERE status='live'").fetchall(); c.close()
+    def mk(did, title, ref):
         def load():
             cc = connect(db_path)
             rs = cc.execute("SELECT idx, text, vec FROM chunks WHERE doc_id=? ORDER BY idx", (did,)).fetchall(); cc.close()
-            return [({"id": f"{did}#{r['idx']}", "source": title, "doc_id": did, "text": r["text"]}, json.loads(r["vec"])) for r in rs]
+            # reference-only documents put no text in the index: it is read from the source at question time
+            return [({"id": f"{did}#{r['idx']}", "source": title, "doc_id": did, "text": "" if ref else r["text"]}, json.loads(r["vec"])) for r in rs]
         return load
-    return {r["id"]: mk(r["id"], r["title"]) for r in rows}
+    return {r["id"]: mk(r["id"], r["title"], bool(r["text_url"])) for r in rows}
 
 def live_titles(db_path=None):
     """[(doc_id, title)] for live documents."""
@@ -228,6 +237,10 @@ def overlap(doc_text, page_text):
     i = len(a & b); return max(i / len(a), i / len(b))
 
 def _doc_text(c, doc_id):
+    d = c.execute("SELECT text_url, recipe FROM documents WHERE id=?", (doc_id,)).fetchone()
+    if d and d["text_url"]:   # reference-only document: read it from the source (temporary cache)
+        import source
+        return source.source_text(doc_id, d["text_url"], d["recipe"]) or ""
     return " ".join(r[0] for r in c.execute("SELECT text FROM chunks WHERE doc_id=? ORDER BY idx", (doc_id,)))
 
 def _reporter_rep(c, reporter):

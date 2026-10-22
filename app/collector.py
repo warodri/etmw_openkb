@@ -16,7 +16,7 @@ RUN_BYTES = 4_000_000
 OLLAMA, READER = "http://127.0.0.1:11436", "qwen3.6:35b-a3b"
 _last = [0.0]; _robots = {}
 
-def get(url, limit=3_000_000):
+def get(url, limit=3_000_000, delay=None):
     h = urllib.parse.urlparse(url).hostname
     if h not in ALLOW: raise ValueError("host not on the allow-list: " + str(h))
     _site = "archive.org" if str(h).endswith("archive.org") else h
@@ -26,7 +26,7 @@ def get(url, limit=3_000_000):
         except Exception: pass
         _robots[h] = rp
     if not _robots[h].can_fetch(UA, url): raise ValueError("robots.txt disallows " + url)
-    wait = DELAY - (time.time() - _last[0])
+    wait = (DELAY if delay is None else delay) - (time.time() - _last[0])
     if wait > 0: time.sleep(wait)
     _last[0] = time.time()
     class _R(urllib.request.HTTPRedirectHandler):
@@ -72,7 +72,7 @@ def collect(ebook_id, publish=False, model_check=True, spent=0):
         body = re.sub(r"\r\n?", "\n", body).strip(); r["bytes"] = len(body.encode())
         if len(body.encode()) > MAX_DOC_BYTES: r["why"] = f"too long for the first runs ({len(body.encode())} bytes)"; return r
         if spent + r["bytes"] > RUN_BYTES: r["why"] = "daily byte cap reached"; return r
-        res = L.submit(text=body, title=title, origin="collector", licence="Public domain", source_url=page_url, credit="Project Gutenberg (public domain in the USA)",
+        res = L.submit(text=body, title=title, origin="collector", licence="Public domain", source_url=page_url, text_url=f"https://www.gutenberg.org/cache/epub/{ebook_id}/pg{ebook_id}.txt", recipe="gutenberg", credit="Project Gutenberg (public domain in the USA)",
                        contributor="collector:gutenberg", declarations=None, **({} if publish else {"dry_run": True})) if publish else {"ok": not L.check_text(body), "reasons": L.check_text(body), "doc_id": None}
         r["ok"] = bool(res.get("ok")); r["why"] = "published " + str(res.get("doc_id")) if (publish and r["ok"]) else ("passes all checks (dry run)" if r["ok"] else "; ".join(res.get("reasons", [])))
     except Exception as e:

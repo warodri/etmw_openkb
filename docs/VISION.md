@@ -18,7 +18,8 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:
 - DECIDED (22 Oct, 13:18): contributors submit a reference (URL or location) to content, not the text itself. Uploading text is not part of the plan. User crawl agents submit the same way. The server fetches the URL, checks it, and indexes it as offsets + hash + URL. Auto-published after automated checks. No human validation of content.
 - DECIDED: Walter's novels enter only later, as a submitted public URL (for example a public Google Drive PDF/Doc), through the same pipeline.
 - DECIDED: crawl agents detect the licence per document.
-- OPEN: what happens when no licence is found. Current default is "not published". Proposal: a pointer-only entry (title, URL, short note, no text stored). Needs Walter's decision.
+- DECIDED (22 Oct, 13:22): crawlers use the licence detected on the page. If none is found, the crawler user's mandatory default licence applies (logged with the account) and the entry is tagged "user-declared". Anyone can request removal.
+- DECIDED (22 Oct, 13:22): user-declared entries show reference only, no quotes, unless the page states its own licence. Build comes after the index-only work.
 
 ## 4. Answers and quotes
 - DECIDED (22 Oct, 13:04): default answer is reference only. Quote on request, with the licence shown. No quote length limit, because indexed content is open-licensed by definition.
@@ -40,8 +41,8 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:
 
 ## 8. Index and storage
 - DECIDED (22 Oct, 13:14): no hosted full text. The library keeps references, offsets, hashes and vectors; the text is fetched from the source at question time. Direction decided; design and build pending (see docs/ARCHITECTURE.md). Source gone or changed = that chunk is dropped and the answer says so.
-- OPEN: 24 h capped cache of fetched source pages (so hosts are not hit on every question). Awaiting Walter's yes.
-- OPEN: the 50 synthetic test documents (no source URL) - keep as a private test corpus or remove.
+- DECIDED (22 Oct, 13:19): 24 h capped cache of fetched source pages, labelled a temporary copy (so hosts are not hit on every question).
+- DECIDED (22 Oct, 13:20): the 50 synthetic test documents are deleted too. A new retest uses real Gutenberg/IA documents. Purge only after that retest passes.
 - DECIDED and DONE (22 Oct, 13:19): converted copy of Walter's novel in data/intake deleted.
 - Current state: the Mac Mini still stores chunk text for 32 library documents until the reference-only build is tested (19/20 retest) and Walter approves the purge. A private backup will be made before any purge.
 - DECIDED (22 Oct, 13:02): disk-based vector index (sqlite-vec, float32, cosine). No all-vectors-in-RAM.
@@ -49,7 +50,7 @@ Single page Walter and the build team check first. Last updated 22 Oct 2026, 13:
 - Retrieval test: 19/20 answers and 5/5 refusals, same as before. Q10 stays as is.
 
 ## 9. OPEN / UNDECIDED
-1. No-licence pages as pointer-only entries (see docs/POINTER-MODE-PLAN.md). Research tests 1 and 2 approved 22 Oct 13:05, research only, nothing public.
+1. Pointer-mode research tests 1 and 2: approved 22 Oct 13:05, research only, nothing public. Not yet run.
 2. Pointer-mode build: not approved.
 3. A lawyer reads docs/CONTENT-LICENSE.md (share-alike interplay) before the paid tier or public launch.
 4. Reference-only build and the purge of stored text (section 8).

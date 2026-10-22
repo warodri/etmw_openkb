@@ -46,7 +46,7 @@ def collect(item, publish=False, model_check=True, spent=0):
             if v != "yes": r["why"] = "model check said " + v; return r
         if spent + r["bytes"] > C.RUN_BYTES: r["why"] = "daily byte cap reached"; return r
         if publish:
-            res = L.submit(text=body, title=title, origin="collector", licence="Public domain", source_url=f"{BASE}/details/{item}",
+            res = L.submit(text=body, title=title, origin="collector", licence="Public domain", source_url=f"{BASE}/details/{item}", text_url=f"{BASE}/download/{urllib.parse.quote(item)}/{urllib.parse.quote(files[0]['name'])}", recipe="ia",
                            credit=f"Library of Congress via Internet Archive; published {year}; public domain in the US (published before 1929)",
                            contributor="collector:internet-archive", declarations=None)
         else:

@@ -1,0 +1,132 @@
+{
+ "answerable": [
+  {
+   "id": 1,
+   "question": "Which phrase begins the Gettysburg Address?",
+   "docs": [
+    "doc-04c71db1032e"
+   ],
+   "expected_fact": "four score and seven"
+  },
+  {
+   "id": 2,
+   "question": "In what year was the Mayflower Compact signed?",
+   "docs": [
+    "doc-582e9e160b5d"
+   ],
+   "expected_fact": "1620"
+  },
+  {
+   "id": 3,
+   "question": "What does the Communist Manifesto say is haunting Europe?",
+   "docs": [
+    "doc-f2048a530d93"
+   ],
+   "expected_fact": "communism"
+  },
+  {
+   "id": 4,
+   "question": "According to Common Sense, what is society produced by?",
+   "docs": [
+    "doc-22823e90191c"
+   ],
+   "expected_fact": "wants"
+  },
+  {
+   "id": 5,
+   "question": "What did Franklin Roosevelt say is the only thing we have to fear?",
+   "docs": [
+    "doc-c397f6e3fe7d"
+   ],
+   "expected_fact": "fear itself"
+  },
+  {
+   "id": 6,
+   "question": "What did Kennedy ask Americans to ask in his inaugural address?",
+   "docs": [
+    "doc-335d18155554"
+   ],
+   "expected_fact": "what you can do for your country"
+  },
+  {
+   "id": 7,
+   "question": "What attitude does Lincoln's second inaugural address call for toward all?",
+   "docs": [
+    "doc-39bf7a077ab0"
+   ],
+   "expected_fact": "malice toward none|charity for all"
+  },
+  {
+   "id": 8,
+   "question": "What is the minimum age to be President under the US Constitution?",
+   "docs": [
+    "doc-ce9fc68cb1fa"
+   ],
+   "expected_fact": "thirty five|35"
+  },
+  {
+   "id": 9,
+   "question": "On what date was the first atomic bomb tested at Trinity Site?",
+   "docs": [
+    "doc-6b1b54e46218",
+    "doc-b4668572a050"
+   ],
+   "expected_fact": "july 16, 1945"
+  },
+  {
+   "id": 10,
+   "question": "In which Maryland county was Frederick Douglass born?",
+   "docs": [
+    "doc-1c33767e51bb"
+   ],
+   "expected_fact": "talbot"
+  },
+  {
+   "id": 11,
+   "question": "In what year did Martin Luther write the Smalcald Articles?",
+   "docs": [
+    "doc-92331945dff7"
+   ],
+   "expected_fact": "1537"
+  },
+  {
+   "id": 12,
+   "question": "What was the date of Patrick Henry's Give Me Liberty speech?",
+   "docs": [
+    "doc-94c45dcd6d23"
+   ],
+   "expected_fact": "1775"
+  },
+  {
+   "id": 13,
+   "question": "Which unalienable rights does the Declaration of Independence list?",
+   "docs": [
+    "doc-55c1375ae72e",
+    "doc-7f08d5cd52e7"
+   ],
+   "expected_fact": "pursuit of happiness"
+  }
+ ],
+ "traps": [
+  {
+   "id": 100,
+   "question": "Who won the 2022 football World Cup final?"
+  },
+  {
+   "id": 101,
+   "question": "What is the boiling point of tungsten in degrees Celsius?"
+  },
+  {
+   "id": 102,
+   "question": "Who is the current CEO of Tesla?"
+  },
+  {
+   "id": 103,
+   "question": "What is the capital city of Australia?"
+  },
+  {
+   "id": 104,
+   "question": "How many moons does Jupiter have?"
+  }
+ ]
+}
