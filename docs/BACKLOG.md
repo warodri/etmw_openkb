@@ -37,3 +37,4 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 - **Disk-based vector index (Walter, 2026-10-22, 13:02):** built and live (sqlite-vec). See docs/VISION.md section 8.
 - **References only, no hosted text (Walter, 2026-10-22, 13:14 and 13:18):** direction decided; design and build pending his answer on the 24 h page cache. Contributors submit references, not text. See docs/ARCHITECTURE.md.
 - **Quote policy (Walter, 2026-10-22, 13:04):** answers reference the source by default, quote on request, licence shown, no quote length limit.
+- **Hugging Face Space (Walter, 2026-10-22, PLAN ONLY):** see docs/HF-SPACE-PLAN.md. Nothing published until he approves.
