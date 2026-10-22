@@ -13,6 +13,60 @@
       </div>
     </div>
 
+    @if (tester()) {
+      <section class="rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-[#1c2a24] p-4 mb-8 text-[14px]">
+        <h2 class="m-0 mb-1 text-lg font-semibold">Tester upload</h2>
+        <p class="mt-0 mb-3 text-neutral-600 dark:text-neutral-300">Donations are closed to the public. You are signed in as a tester, so you can add a document now. It goes live in the library after automatic checks.</p>
+        @switch (stage()) {
+          @case ('form') {
+            <label class="block mb-3">File (PDF, Word, EPUB, text or Markdown)
+              <input type="file" accept=".pdf,.docx,.epub,.txt,.md,.html,.png,.jpg,.jpeg" class="mt-1 block w-full text-base" (change)="pick($event)">
+            </label>
+            <p class="m-0 text-neutral-500 dark:text-neutral-400 text-[13px]">The text is shown to you first. Nothing is stored until you submit.</p>
+          }
+          @case ('converting') { <p class="m-0">{{ note() }}</p> }
+          @case ('preview') {
+            <label class="block mb-3">Title
+              <input class="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" maxlength="150" [value]="title()" (input)="title.set($any($event.target).value)">
+            </label>
+            <label class="block mb-3">Credit as (name or handle shown with the document)
+              <input class="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" maxlength="120" [value]="credit()" (input)="credit.set($any($event.target).value)">
+            </label>
+            <label class="block mb-3">Licence it is shared under
+              <select class="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" [value]="licence()" (change)="licence.set($any($event.target).value)">
+                @for (l of licences; track l) { <option [value]="l">{{ l }}</option> }
+              </select>
+            </label>
+            <label class="block mb-3">Source link (optional for your own work)
+              <input class="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-base" maxlength="300" [value]="sourceUrl()" (input)="sourceUrl.set($any($event.target).value)">
+            </label>
+            <label class="block mb-3">Converted text from {{ fileName() }}. Fix any errors here.
+              <textarea class="mt-1 w-full min-h-[260px] px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-[13px] font-mono" [value]="text()" (input)="text.set($any($event.target).value)"></textarea>
+            </label>
+            <div class="space-y-2 mb-3">
+              <label class="flex items-start gap-3"><input type="checkbox" class="mt-1" [checked]="d1()" (change)="d1.set($any($event.target).checked)"><span>This is mine to share, or its licence allows it.</span></label>
+              <label class="flex items-start gap-3"><input type="checkbox" class="mt-1" [checked]="d2()" (change)="d2.set($any($event.target).checked)"><span>I am OK with it being published under CC BY-SA 4.0.</span></label>
+              <label class="flex items-start gap-3"><input type="checkbox" class="mt-1" [checked]="d3()" (change)="d3.set($any($event.target).checked)"><span>I understand it can be edited, with the history kept.</span></label>
+            </div>
+            <div class="flex gap-2">
+              <button class="flex-1 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent cursor-pointer" (click)="reset()">Cancel</button>
+              <button class="flex-1 min-h-[44px] rounded-lg bg-neutral-800 text-white dark:bg-neutral-200 dark:text-neutral-900 border-0 cursor-pointer disabled:opacity-50" [disabled]="!ready" (click)="submit()">Submit to the library</button>
+            </div>
+          }
+          @case ('submitting') { <p class="m-0">{{ note() }}</p> }
+          @case ('published') {
+            <p class="mt-0"><b>It is in the library.</b> Ask a question about it to see it used. Anyone can report it, and you can ask for it to be removed at any time.</p>
+            <button class="px-4 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent cursor-pointer" (click)="reset()">Add another</button>
+          }
+          @default {
+            <p class="mt-0"><b>{{ stage() === 'rejected' ? 'Not added.' : 'Something went wrong.' }}</b></p>
+            <ul class="pl-5 list-disc mt-0">@for (r of reasons(); track r) { <li>{{ r }}</li> }</ul>
+            <button class="px-4 min-h-[44px] rounded-lg border border-neutral-300 dark:border-neutral-600 bg-transparent cursor-pointer" (click)="reset()">Start again</button>
+          }
+        }
+      </section>
+    }
+
     <div class="rounded-xl border border-neutral-300 dark:border-neutral-600 bg-neutral-50 dark:bg-neutral-900 p-4 mb-8 text-[14px]">
       <b>Donations open soon.</b> We're finishing the consent review first. You can read how it will work below. The submit button stays off until then.
     </div>

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, from, switchMap } from 'rxjs';
 
 export interface Task {
   id: string;
@@ -70,6 +70,21 @@ export class ApiService {
       headers: { 'Content-Type': blob.type || 'application/octet-stream' },
     });
   }
+
+  canUpload() { return this.http.get<{ open: boolean }>('/api/library/can-upload'); }
+  convertFile(file: File) {
+    return from(file.arrayBuffer()).pipe(
+      switchMap((buf) =>
+        this.http.post<{ job: string }>('/api/library/convert', buf, {
+          headers: { 'Content-Type': 'application/octet-stream', 'X-Filename': encodeURIComponent(file.name) },
+        })
+      )
+    );
+  }
+  job(id: string) {
+    return this.http.get<{ status: string; text?: string; chars?: number; doc_id?: string; reasons?: string[] }>('/api/library/job/' + id);
+  }
+  uploadDoc(body: object) { return this.http.post<{ job: string }>('/api/library/upload', body); }
 
   report(doc_id: string, reason: string, details: string, email: string) {
     return this.http.post<{ id: string; hidden: boolean }>('/api/report', { doc_id, reason, details, email });
