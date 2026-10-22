@@ -15,6 +15,8 @@ Priorities change; order is not ranking. Add dated entries, keep them short.
 - Walter intends to use OpenKB himself for both Chat and Work via the desktop
   client - the desktop client is his own daily driver, not only a later user stage.
 
+- **Licence decision (Walter, 2026-10-22):** CC BY-SA only, for all content. No donor choice, no NC variant. Open: whether user crawl agents accept only PD/CC0 sources (proposal) - awaiting Walter.
+
 ## Done
 
 - **Pages 1-3 shipped** (2026-10-21): /agent (agent mode guide), /how (How this works), /donate (donations CLOSED, "opens soon", LLM/agent path documented only). Sidebar links updated. Awaiting Walter's review; the machine-gathered licensing decision stays his.

@@ -4,6 +4,7 @@ Status: PLAN ONLY, for Walter's review. Nothing here is built. Written 2026-10-2
 Builds on docs/LIBRARIAN.md (spec draft) and the existing intake pipeline.
 
 ## Fixed rules (Walter's decisions)
+- Decision 2026-10-22: single licence, CC BY-SA, for everything in the library. No donor choice of licence, no non-commercial (NC) variant.
 - One library, one licence: CC BY-SA. No separate showcase or "producer" area. The producer idea stays as story material for posts and videos.
 - Collectors take public domain or CC0 only. Nothing else is collected by machine.
 - Collectors are opencode agents on the local model. No paid model calls. Max 2 running at once.
