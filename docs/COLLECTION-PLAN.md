@@ -108,3 +108,6 @@ Daily at 03:30 on the Mac Mini (launchd job com.openkb.collector): `app/collecto
 
 ### Collector 2: Library of Congress on the Internet Archive (Walter, 2026-10-22, option a)
 app/collector_ia.py, run daily at 05:00 (launchd job com.openkb.collector-ia, `collector_run.py --source ia --n 25`). Rule check: item is in the library_of_congress collection, English, a publication year of 1928 or earlier in its metadata (public domain in the US by date), a full-text OCR file of 300 KB or less. Then a local-model sanity check and the normal library checks. Provenance records the item URL and the year. Same politeness as Gutenberg (one worker, 5 s). The Internet Archive's own licence field is NOT trusted (uploader-declared). Collectors run one after another (03:30 Gutenberg, 05:00 Internet Archive). Wikisource is later; no US-government host unless Walter names one.
+
+### Run lock and weekly sample
+collector_run.py takes a file lock (data/collector.lock); a second run that starts while one is going logs "skipped" and exits, so runs never overlap. `python3 app/weekly_sample.py` writes data/weekly_sample.md: 20 random live documents from the week (title, source, id) for the maintainer. It is a report, not a gate.

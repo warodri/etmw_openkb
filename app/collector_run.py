@@ -40,6 +40,11 @@ def catalog():
             yield int(r["Text#"]), r.get("Title", "")
 
 def main():
+    import fcntl
+    lockf = open(os.path.join(DATA, "collector.lock"), "w")
+    try: fcntl.flock(lockf, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        open(RUNS, "a").write(json.dumps({"skipped": "another collector run is in progress", "at": time.strftime("%Y-%m-%dT%H:%M:%S")}) + "\n"); print("another run in progress, skipping"); return
     a = sys.argv[1:]; source = a[a.index("--source") + 1] if "--source" in a else "gutenberg"; n = int(a[a.index("--n") + 1]) if "--n" in a else 25
     publish, mc = "--publish" in a, "--model-check" in a
     st = json.load(open(STATE)) if os.path.exists(STATE) else {"tried": []}
