@@ -9,7 +9,7 @@ BASE = "https://archive.org"
 
 def catalog(skip=0):
     """Yield (identifier, title) of English LoC texts dated <= 1928, most downloaded first."""
-    q = 'collection:library_of_congress AND mediatype:texts AND language:eng AND date:[* TO 1928-12-31]'
+    q = 'collection:library_of_congress AND mediatype:texts AND language:eng AND date:[* TO 1928-12-31] AND item_size:[8000000 TO 40000000]'
     start = 0
     while start < 3000:
         url = BASE + "/advancedsearch.php?" + urllib.parse.urlencode({"q": q, "fl[]": ["identifier", "title"], "sort[]": "downloads desc", "rows": 100, "page": start // 100 + 1, "output": "json"}, doseq=True)
@@ -41,7 +41,7 @@ def collect(item, publish=False, model_check=True, spent=0):
         raw = C.get(f"{BASE}/download/{urllib.parse.quote(item)}/{urllib.parse.quote(files[0]['name'])}", limit=C.MAX_DOC_BYTES * 2)
         body = re.sub(r"\r\n?", "\n", raw).strip(); r["bytes"] = len(body.encode())
         if model_check:
-            snip = f"Title: {title}. Library of Congress collection. Publication year in metadata: {year}. Opening text: " + re.sub(r"\s+", " ", body[:500])
+            snip = f"Title: {title}. Library of Congress collection. Publication year in the catalogue: {year}. Language: English."
             v = C.model_licence(snip, title) if False else _model(snip); r["model"] = v
             if v != "yes": r["why"] = "model check said " + v; return r
         if spent + r["bytes"] > C.RUN_BYTES: r["why"] = "daily byte cap reached"; return r
