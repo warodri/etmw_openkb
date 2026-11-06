@@ -22,7 +22,9 @@ sqlite-vec, float32 cosine vectors in data/vindex.db (app/vindex.py). No vectors
 Versioning rule: an embedding model change means a new index, never a silent overwrite.
 
 ## 3. The demo / API (ETMW) - just one consumer
-ETMW hosts the live demo. Anyone else can run the reader on their own machine against the same references. ETMW hosting is a convenience, not a gate.
+ETMW hosted a public demo, which is now retired. Anyone can run the reader
+on their own machine against the same references. Hosting is a convenience,
+not a gate.
 
 ## Contributing (DECIDED)
 Contributors submit a reference (a URL or location), not the text. Crawl agents submit the same way. Uploading a file is not part of the plan.

@@ -7,8 +7,7 @@ open licences, named sources - read by a model that runs on your own machine.
 No cloud. No API bill. No black box between you and the answer, and no answer
 without a source you can check.
 
-**Try the live demo:** 
-https://openkb--warodri.entertomyworld.com/
+**No hosted demo right now** — the public instance was retired. Run it yourself below.
 
 **Install your own:** `./install.sh` 
 See [docs/INSTALL.md](docs/INSTALL.md)

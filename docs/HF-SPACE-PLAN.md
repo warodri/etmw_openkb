@@ -8,7 +8,7 @@ Goal: visibility. People browsing Hugging Face find OpenKB, see what it is, and 
 **Recommended: a Static Space** (sdk: static) that is a front end calling the live Mac Mini API.
 - Static Spaces are free for everyone and run no compute. Gradio and Docker Spaces need a paid plan to create (PRO for a personal account), per the docs.
 - The small local model (a 35B reader) cannot run on the free CPU Space (2 vCPU, 16 GB), so a self-contained demo is not possible there without paid GPU hardware. Even then it would need the library, which lives as references only.
-- v1: a landing page with the OpenKB hero (text unchanged), a live status badge and counter (from /api/public-stats), three screenshots, "Open the live demo" button (opens https://openkb--warodri.entertomyworld.com/ in a new tab), links to GitHub and the docs. Donations stay closed ("Donations open soon").
+- v1: a landing page with the OpenKB hero (text unchanged), a live status badge and counter (from /api/public-stats), three screenshots, "Install and run it yourself" button (links to the GitHub install section), links to GitHub and the docs. Donations stay closed ("Donations open soon").
 - v2 (only after a test): an embedded ask box on the Space that calls /ask. Reason to wait: browsers block cookies in an embedded frame, and the app keeps the anonymous session and daily cap per browser cookie and IP. Test first whether /ask works without a cookie and whether the per-IP limits still hold.
 
 Not recommended: copying the library or an index to a Hugging Face dataset. The library holds references only; a published index would make the vectors public (a lawyer question, see docs/VISION.md section 9).
@@ -51,7 +51,7 @@ OpenKB is the first model you can run locally... (hero text exactly as on the si
 
 A small AI model that runs on your own machine reads one shared library of open-licensed documents. It looks up only the parts it needs, answers from them, and shows the source and the licence. If the answer is not in the library, it says so.
 
-- **Try the live demo:** https://openkb--warodri.entertomyworld.com/
+- **Run it yourself:** https://github.com/warodri/etmw_openkb#install
 - **Code (Apache 2.0):** https://github.com/warodri/etmw_openkb
 - **Library:** public domain, CC0, CC BY, CC BY-SA, MIT, Apache-2.0 and BSD documents, each tagged with its licence. The library keeps references, offsets and vectors, not copies; text is read from the source when you ask.
 - **Status:** v0.1 beta. A small library, one machine. Donations open soon.

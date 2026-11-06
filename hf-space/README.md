@@ -19,7 +19,7 @@ OpenKB is the first model you can run locally and have the same result as any fr
 
 A small AI model that runs on your own machine reads one shared library of open-licensed documents. It looks up only the parts it needs, answers from them, and shows the source and the licence. If the answer is not in the library, it says so.
 
-- **Try the live demo:** https://openkb--warodri.entertomyworld.com/
+- **Run it yourself:** https://github.com/warodri/etmw_openkb#install
 - **Code (Apache 2.0):** https://github.com/warodri/etmw_openkb
 - **Library:** public domain, CC0, CC BY, CC BY-SA, MIT, Apache-2.0 and BSD documents, each tagged with its licence. The library keeps references, offsets and vectors, not copies; text is read from the source when you ask.
 - **Status:** v0.1 beta. A small library, one machine. Donations open soon.

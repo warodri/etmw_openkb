@@ -38,9 +38,9 @@ footer a{color:var(--accent)}
 <main>
   <div class="brand"><b aria-hidden="true"></b> OpenKB <span class="note">v0.1 beta</span></div>
   <h1>OpenKB is the first model you can run locally and have the same result as any frontier models you may know. It answers from a growing open library the community populates constantly</h1>
-  <p id="status" class="pill off" role="status"><span class="dot" aria-hidden="true"></span><span id="status-text">Checking the live demo...</span></p>
-  <p><a class="cta" href="https://openkb--warodri.entertomyworld.com/" target="_blank" rel="noopener">Open the live demo</a></p>
-  <p class="note">The demo runs on one small machine and answers one question at a time. If it is busy you will see a short queue message.</p>
+  <p id="status" class="pill off" role="status"><span class="dot" aria-hidden="true"></span><span id="status-text">Checking the library status...</span></p>
+  <p><a class="cta" href="https://github.com/warodri/etmw_openkb#install" target="_blank" rel="noopener">Install and run it yourself</a></p>
+  <p class="note">OpenKB runs on your own machine. There is no hosted demo at the moment.</p>
 
   <div class="grid">
     <div class="card"><h2>Small model, shared library</h2><p>A small AI model that runs on your own computer reads one shared library. It looks up only the parts it needs.</p></div>
@@ -54,20 +54,22 @@ footer a{color:var(--accent)}
   </figure>
 
   <footer>
-    <p><a href="https://github.com/warodri/etmw_openkb" target="_blank" rel="noopener">Code on GitHub</a> (Apache 2.0) &middot; <a href="https://openkb--warodri.entertomyworld.com/how" target="_blank" rel="noopener">How it works</a> &middot; Donations open soon.</p>
+    <p><a href="https://github.com/warodri/etmw_openkb" target="_blank" rel="noopener">Code on GitHub</a> (Apache 2.0) &middot; Donations open soon.</p>
     <p>Copyright concern or a problem with a document? Use the Report button in the app. This page shows no library text and collects no data.</p>
   </footer>
 </main>
 <script>
 (function () {
-  var API = "https://openkb--warodri.entertomyworld.com/api/public-stats";
+  // Relative on purpose: this page is served either by the app itself or as a static copy with
+  // no backend, in which case the badge reports the library as unavailable.
+  var API = "/api/public-stats";
   var box = document.getElementById("status"), txt = document.getElementById("status-text");
   function set(on, t) { box.className = "pill " + (on ? "on" : "off"); txt.textContent = t; }
   var ctl = new AbortController(); setTimeout(function () { ctl.abort(); }, 8000);
   fetch(API, { signal: ctl.signal, credentials: "omit" }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (s) {
     var n = s.active_crawlers, t = s.documents != null ? s.documents + " documents" : "Live";
     set(true, t + (n ? ", added by " + n + (n === 1 ? " collector" : " collectors") : ""));
-  }).catch(function () { set(false, "The live demo looks offline right now. Try again in a little while."); });
+  }).catch(function () { set(false, "The library is not reachable right now."); });
 })();
 </script>
 </body>

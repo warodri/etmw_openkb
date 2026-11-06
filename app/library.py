@@ -370,8 +370,14 @@ def decide_report(rid, decision, actor, db_path=None):
     return True
 
 VERIFY_DAYS = 7
+
+# Public base for links in verification mail. There is no hosted OpenKB any more, so this is
+# empty unless set; callers that know their own address pass base_url explicitly.
+OPENKB_BASE_URL = os.environ.get("OPENKB_BASE_URL", "")
+
 def verification_mail(v, doc_title, base_url):
-    link = base_url.rstrip("/") + "/verify/" + v["token"]
+    base_url = (base_url or "").rstrip("/")
+    link = base_url + "/verify/" + v["token"]
     subj = "Please confirm: is this your work? (OpenKB copyright check)"
     body = (f"Hello {v['holder']},\n\n"
             "Someone has told the OpenKB library (an open, CC BY-SA knowledge library) that a document in it belongs to you or to the organisation you run, "
@@ -383,7 +389,7 @@ def verification_mail(v, doc_title, base_url):
             "or 'No, this is not ours / we do not object' (we keep it). If we hear nothing within "
             f"{VERIFY_DAYS} days we keep the document and close the report. You can also reply to this email.\n\n"
             "We will never ask you for money or personal documents. If you did not expect this message, ignore it.\n\n"
-            "OpenKB, https://openkb--warodri.entertomyworld.com/report")
+            + (f"OpenKB, {base_url}/report" if base_url else "OpenKB"))
     return subj, body
 
 def outbox(db_path=None):
@@ -415,7 +421,7 @@ def mark_sent(vid, actor="mail-task", db_path=None):
     if n: log(c, "verification-sent", None, actor, vid)
     c.commit(); c.close(); return bool(n)
 
-def outbox_json(base_url="https://openkb--warodri.entertomyworld.com", status=("draft", "approved"), db_path=None):
+def outbox_json(base_url=OPENKB_BASE_URL, status=("draft", "approved"), db_path=None):
     """Machine-readable drafts: [{id, report_id, status, to, subject, body, doc_title}]"""
     out = []
     for v in outbox(db_path):
