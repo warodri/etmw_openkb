@@ -81,6 +81,15 @@ CTYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css":
           ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png",
           ".ico": "image/x-icon", ".woff2": "font/woff2", ".woff": "font/woff", ".txt": "text/plain"}
 
+MONITORING_SUBJECT_PREFIX = "MONITORING - "
+
+def monitoring_subject(subject):
+    """Owner alerts are all monitoring mail, so tag them for inbox filtering."""
+    text = str(subject)
+    if text.startswith(MONITORING_SUBJECT_PREFIX):
+        return text
+    return MONITORING_SUBJECT_PREFIX + text
+
 def send_mail(subject, body):
     """Email the owner only. Never sends to any other address."""
     if not OWNER_EMAIL:
@@ -92,7 +101,7 @@ def send_mail(subject, body):
         name = ENVV.get("EMAIL_FROM_NAME", "OpenKB demo")
         if not (host and user and pw and frm): return False
         msg = MIMEText(body)
-        msg["Subject"], msg["From"], msg["To"] = subject, f"{name} <{frm}>", OWNER_EMAIL
+        msg["Subject"], msg["From"], msg["To"] = monitoring_subject(subject), f"{name} <{frm}>", OWNER_EMAIL
         with smtplib.SMTP_SSL(host, port, context=ssl.create_default_context(), timeout=15) as s:
             s.login(user, pw)
             s.sendmail(frm, [OWNER_EMAIL], msg.as_string())
